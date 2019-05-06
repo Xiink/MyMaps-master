@@ -96,6 +96,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     MarkerOptions markerOptions1 = new MarkerOptions();
     MarkerOptions markerOptions2 = new MarkerOptions();
     Handler handler = new Handler();
+    Handler handler2 = new Handler();
 
     LocationManager mLocationManager;
 
@@ -167,7 +168,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             public void onPermissionGranted(PermissionGrantedResponse response) {
                                 mRequestingLocationUpdates = true;
                                 startLocationUpdates();
-                               /* */
+                                handler2.removeCallbacks(moveMap);
+                                handler2.postDelayed(moveMap, 500);
                             }
 
                             @Override
@@ -191,6 +193,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             @Override
             public void onClick(View v) {
                 handler.removeCallbacksAndMessages(null);
+                handler2.removeCallbacksAndMessages(null);
             }
         });
 
@@ -324,7 +327,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             num++;
         } else if (num != 0) {
             //初始話
-            latLng1 = new LatLng(0, 0);
             latLng2 = new LatLng(0, 0);
             latLng3 = new LatLng(0, 0);
             num = 0;
@@ -534,43 +536,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         @Override
         public void run() {
             mMap.clear();
-
-            String best = " ";
-            //mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,1000,10,myListener);//1秒 10公尺偵測
-
-
-         /*  Location location = mLocationManager.getLastKnownLocation(best);//取得上次定位位置
-             mylocation=location;
-
-             if(location!=null)
-                Toast.makeText(getApplicationContext(), "正常!", Toast.LENGTH_SHORT).show();
-
-            try {
-                updateMyLocation(mylocation);
-            }catch (Exception e){
-                Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
-            }*/
-            //Location  location = mLocationManager.getLastKnownLocation(best);
-//----------------------------------------------------------------------------------------------------
-           /* mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            Criteria criteria = new Criteria();
-            best = mLocationManager.getBestProvider(criteria, false);
-            if (best != null && !best.equals("")) {
-                if (ActivityCompat.checkSelfPermission(MapsActivity_Test.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity_Test.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
-                }
-                //Location location = mLocationManager.getLastKnownLocation(best);
-                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 1,  myListener);
-                //mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 5, myListener);
-            }*/
-//----------------------------------------------------------------------------------------------------
             latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
             markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
@@ -588,13 +553,17 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         }
     };
 
+    private Runnable moveMap = new Runnable() {
+        @Override
+        public void run() {
+            latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
+        }
+    };
+
     void updateMyLocation(Location mylocation){
         latLng1 = new LatLng(mylocation.getLatitude(),mylocation.getLongitude());
-        //dLat = (mylocation.getLatitude()); //取得緯度
-        //dLng = (mylocation.getLongitude());//取得經度
-        //LatLng nkut = new LatLng(dLat, dLng);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
-        //button2.setText("No");
     }
 
 
