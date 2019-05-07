@@ -2,7 +2,11 @@ package com.example.user.mymaps;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -64,6 +68,7 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -72,8 +77,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -130,6 +137,21 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private static final String TAG = MapsActivity_Test.class.getSimpleName();
 
 
+    BluetoothAdapter mBluetoothAdapter;
+    BluetoothSocket mmSocket;
+    BluetoothDevice mmDevice;
+    OutputStream mmOutputStream;
+    InputStream mmInputStream;
+    Thread workerThread;
+    byte[] readBuffer;
+    int readBufferPosition;
+    int counter;
+    volatile boolean stopWorker;
+    private String send_text = null;
+
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,6 +169,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         button2 = (Button) findViewById(R.id.button2);
         button3 = (Button) findViewById(R.id.buttontest);
 
+
+
+
+
+
+
         //開始導航
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -157,9 +185,18 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         });
 
         //暫停導航
-        button2.setOnClickListener(new View.OnClickListener() {
+        button3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                try {
+                    findBT();
+                    openBT();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
                 //handler.removeCallbacksAndMessages(null);
                 Dexter.withActivity(MapsActivity_Test.this)
                         .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -189,7 +226,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             }
         });
 
-        button3.setOnClickListener(new View.OnClickListener() {
+        button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 handler.removeCallbacksAndMessages(null);
@@ -326,7 +363,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             taskRequestDirections.execute(url);
             num++;
         } else if (num != 0) {
-            //初始話
+            //初始化
             latLng2 = new LatLng(0, 0);
             latLng3 = new LatLng(0, 0);
             num = 0;
@@ -449,6 +486,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     howlong = howlong.replace("</div>", " ");
                     howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
                     textView.setText(howlong);
+                    try {
+                        sendData(howlong);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
                     points.add(new LatLng(lat, lon));
                 }
@@ -606,6 +648,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         // TODO Auto-generated method stub
         super.onDestroy();
 
+        try {
+            closeBT();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         String best = mLocationManager.getBestProvider(criteria, true);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -662,6 +709,133 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         PermissionUtils.PermissionDeniedDialog
                 .newInstance(true).show(getSupportFragmentManager(), "dialog");
     }
+
+
+
+
+
+
+
+
+
+
+
+    /**     搜尋並配對 ESP32test 設備*/
+    void findBT() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+        /**     確認有無藍芽功能*/
+        if (mBluetoothAdapter == null) {
+            //myLabel.setText("No bluetooth adapter available");
+            Toast.makeText(this,"當前設備並無藍芽功能",Toast.LENGTH_LONG).show();
+        }
+
+        /**     確認當前有無開啟藍芽，若無則發送請求開啟藍芽*/
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBluetooth, 0);
+        }
+
+        /**     有開啟藍芽，且有搜尋到指定設備則連接*/
+        if (mBluetoothAdapter.isEnabled()){
+            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+            if (pairedDevices.size() > 0) {
+                for (BluetoothDevice device : pairedDevices) {
+                    if (device.getName().equals("ESP32test")) {
+                        mmDevice = device;
+                        break;
+                    }
+                }
+            }
+            Toast.makeText(this,"已連接藍芽設備",Toast.LENGTH_LONG).show();
+//            myLabel.setText("Bluetooth Device Found");
+        }
+    }
+
+    /**     設備連接*/
+    void openBT() throws IOException{
+        UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); /**        Standard SerialPortService ID*/
+        try {
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+            mmSocket.connect();
+            mmOutputStream = mmSocket.getOutputStream();
+            mmInputStream = mmSocket.getInputStream();
+        } catch (Exception e) {
+            Log.e(TAG, "openBT: Can't connect to the device", e);
+        }
+
+        beginListenForData();
+
+//        myLabel.setText("Bluetooth Opened");
+    }
+
+
+    /**     資料監聽*/
+    void beginListenForData() {
+        final Handler handler = new Handler();
+        final byte delimiter = 10; //This is the ASCII code for a newline character
+
+        stopWorker = false;
+        readBufferPosition = 0;
+        readBuffer = new byte[1024];
+        workerThread = new Thread(new Runnable() {
+            public void run() {
+                while (!Thread.currentThread().isInterrupted() && !stopWorker) {
+                    try {
+                        int bytesAvailable = mmInputStream.available();
+                        if (bytesAvailable > 0) {
+                            byte[] packetBytes = new byte[bytesAvailable];
+                            mmInputStream.read(packetBytes);
+                            for (int i = 0; i < bytesAvailable; i++) {
+                                byte b = packetBytes[i];
+                                if (b == delimiter) {
+                                    byte[] encodedBytes = new byte[readBufferPosition];
+                                    System.arraycopy(readBuffer, 0, encodedBytes, 0, encodedBytes.length);
+                                    final String data = new String(encodedBytes, "UTF-8");                      /**     傳送編碼*/
+                                    readBufferPosition = 0;
+
+                                    handler.post(new Runnable() {
+                                        public void run() {
+//                                            myLabel.setText(data);
+                                        }
+                                    });
+                                } else {
+                                    readBuffer[readBufferPosition++] = b;
+                                }
+                            }
+                        }
+                    } catch (IOException ex) {
+                        stopWorker = true;
+                    }
+                }
+            }
+        });
+
+        workerThread.start();
+    }
+
+    /**     傳送資料*/
+    void sendData(String s) throws IOException {
+        String msg = s;
+        msg += "\n";
+        mmOutputStream.write(msg.getBytes());
+//        myLabel.setText("Data Sent");
+    }
+
+    /**     斷開設備*/
+    void closeBT() throws IOException {
+        stopWorker = true;
+        mmOutputStream.close();
+        mmInputStream.close();
+        mmSocket.close();
+//        myLabel.setText("Bluetooth Closed");
+    }
+
+
+
+
+
+
 
 
 

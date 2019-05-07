@@ -36,13 +36,14 @@
         android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="top|center"
         android:text="開始導航" />
 
     <Button
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="left|center_vertical"
+        android:layout_gravity="top|right|center_vertical"
         android:gravity="top"
         android:text="暫停" />
 
@@ -57,7 +58,7 @@
         android:id="@+id/buttontest"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|right"
-        android:text="Button" />
+        android:layout_gravity="top|bottom"
+        android:text="開始定位" />
 
 </FrameLayout>
