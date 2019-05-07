@@ -47,7 +47,7 @@ public class DirectionsParser {
 
                         instructions = (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));
                         text = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("distance")).get("text");
-                        howlong = "\n"+instructions+"走:"+text;
+                        howlong = "\n"+instructions;
 
                         List list = decodePolyline(polyline);
 
@@ -57,6 +57,7 @@ public class DirectionsParser {
                             hm.put("lat", Double.toString(((LatLng) list.get(l)).latitude));
                             hm.put("lon", Double.toString(((LatLng) list.get(l)).longitude));
                             hm.put("howlong",howlong);
+                            hm.put("Km",text);
                             path.add(hm);
                         }
                     }

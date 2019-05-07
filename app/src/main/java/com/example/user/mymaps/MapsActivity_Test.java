@@ -189,12 +189,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             @Override
             public void onClick(View v) {
 
-                try {
+            /*    try {
                     findBT();
                     openBT();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
+                }*/
 
 
                 //handler.removeCallbacksAndMessages(null);
@@ -480,17 +480,57 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                     //印出導航資訊
                     String howlong = point.get("howlong");
+                    String Km = point.get("Km");
                     //正則
                     howlong = howlong.replace("<b>", " ");
                     howlong = howlong.replace("</b>", " ");
                     howlong = howlong.replace("</div>", " ");
                     howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    textView.setText(howlong);
-                    try {
-                        sendData(howlong);
+                    howlong = howlong.replace("<b>", " ");
+                    howlong = howlong.replace("</b>", " ");
+                    howlong = howlong.replace("</div>", " ");
+                    howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                    //textView.setText(howlong);
+                    switch (howlong.charAt(1)) {
+                        case 'H':
+                            send_text = "H";
+                            switch (howlong.charAt(7)) {
+                                case 'n':
+                                    send_text += "N";
+                                    break;
+                                case 's':
+                                    send_text += "S";
+                                    break;
+                                case 'w':
+                                    send_text += "W";
+                                    break;
+                                case 'h':
+                                    send_text += "H";
+                                    break;
+
+                                case 'T':
+                                    send_text = "T";
+                                    switch (send_text.charAt(6)) {
+                                        case 'r':
+                                        case 'R':
+                                            send_text += "R";
+                                            break;
+                                        case 'l':
+                                        case 'L':
+                                            send_text += "L";
+                                            break;
+                                    }
+                            }
+                    }
+                    send_text+=Km;
+                    textView.setText(send_text);
+
+                 /*   try {
+                        sendData(send_text);
                     } catch (IOException e) {
                         e.printStackTrace();
-                    }
+                    }*/
+
 
                     points.add(new LatLng(lat, lon));
                 }
