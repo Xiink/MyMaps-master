@@ -121,7 +121,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     // than your app can handle
     private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
 
-    private static final int REQUEST_CHECK_SETTINGS = 100;
+    private static final int REQUEST_CHECK_SETTINGS = 500;
 
     // bunch of location related apis
     private FusedLocationProviderClient mFusedLocationClient;
@@ -148,7 +148,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     int counter;
     volatile boolean stopWorker;
     private String send_text = null;
-
+    boolean btnopen = false;
 
 
 
@@ -168,11 +168,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         button = (Button) findViewById(R.id.button1);
         button2 = (Button) findViewById(R.id.button2);
         button3 = (Button) findViewById(R.id.buttontest);
-
-
-
-
-
 
 
         //開始導航
@@ -205,8 +200,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             public void onPermissionGranted(PermissionGrantedResponse response) {
                                 mRequestingLocationUpdates = true;
                                 startLocationUpdates();
-                                handler2.removeCallbacks(moveMap);
-                                handler2.postDelayed(moveMap, 500);
+                                if(btnopen) {
+                                    handler2.removeCallbacks(moveMap);
+                                    handler2.postDelayed(moveMap, 500);
+                                }
                             }
 
                             @Override
@@ -284,6 +281,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                 mLocationCallback, Looper.myLooper());
 
                         Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
+                        btnopen = true;
                     }
                 })
                 .addOnFailureListener(this, new OnFailureListener() {
@@ -523,8 +521,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             }
                     }
                     send_text+=Km;
-                    textView.setText(send_text);
-
                  /*   try {
                         sendData(send_text);
                     } catch (IOException e) {
@@ -540,6 +536,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 polylineOptions.color(Color.BLUE);
                 polylineOptions.geodesic(true);
             }
+
+            Log.e(TAG, "onPostExecute: SEND_DATA: " + send_text);
+            textView.setText(send_text);
 
             if (polylineOptions != null) {
                 mMap.addPolyline(polylineOptions);

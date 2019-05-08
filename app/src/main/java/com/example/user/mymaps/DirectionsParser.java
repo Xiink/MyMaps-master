@@ -46,7 +46,7 @@ public class DirectionsParser {
                         polyline = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("polyline")).get("points");
 
                         instructions = (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));
-                        text = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("distance")).get("text");
+                        text = (String) ((JSONObject) ((JSONObject) jSteps.get(0)).get("distance")).get("text");
                         howlong = "\n"+instructions;
 
                         List list = decodePolyline(polyline);
