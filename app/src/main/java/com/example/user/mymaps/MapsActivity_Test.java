@@ -93,8 +93,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         ActivityCompat.OnRequestPermissionsResultCallback {
 
 
-    private TextView mMyTextView;
-    private TextView mChickTextView;
     private TextView textView;
     private Button button, button2,button3;
     private GoogleMap mMap;
@@ -164,8 +162,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        mMyTextView = (TextView) findViewById(R.id.my_text);
-        mChickTextView = (TextView) findViewById(R.id.chick_text);
         textView = (TextView) findViewById(R.id.textView);
         button = (Button) findViewById(R.id.button1);
         button2 = (Button) findViewById(R.id.buttontest);
@@ -334,7 +330,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     //點擊地圖
     @Override
     public void onMapClick(LatLng point) {
-        mChickTextView.setText("Maker, point=" + point);
         if (num == 0) {
             //建立標記並加入地圖中
             markerOptions1.position(new LatLng(point.latitude, point.longitude));
@@ -342,7 +337,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             markerOptions1.draggable(true);
             mMap.addMarker(markerOptions1);
             latLng2 = new LatLng(point.latitude, point.longitude);
-            mChickTextView.setText("latitude:" + point.latitude + ",longitude:" + point.longitude);
             //備份座標點
             latLng3 = latLng2;
             String url = getRequestUrl(latLng1, latLng2);
@@ -575,7 +569,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             markerOptions2.title("Origin!");
             markerOptions2.draggable(true);
             mMap.addMarker(markerOptions2);
-            mMyTextView.setText("latitude:" + latLng1.latitude + ",longitude:" + latLng1.longitude);
             num2++;
         } else if (num == 0 && num2 != 0) {
             latLng1 = new LatLng(0, 0);
@@ -592,7 +585,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             markerOptions2.draggable(true);
             mMap.addMarker(markerOptions1);
             mMap.addMarker(markerOptions2);
-            mMyTextView.setText("latitude:" + latLng1.latitude + ",longitude:" + latLng1.longitude);
             num2++;
             String url = getRequestUrl(latLng1, latLng2);
             TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
@@ -616,7 +608,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             markerOptions2.title("Origin!");
             markerOptions2.draggable(true);
             mMap.addMarker(markerOptions1);
-            mMyTextView.setText("latitude:" + latLng1.latitude + ",longitude:" + latLng1.longitude);
             String url = getRequestUrl(latLng1, latLng2);
             TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
             taskRequestDirections.execute(url);
