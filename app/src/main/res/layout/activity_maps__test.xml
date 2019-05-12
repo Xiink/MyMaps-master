@@ -39,14 +39,6 @@
         android:layout_gravity="top|center"
         android:text="開始導航" />
 
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|right|center_vertical"
-        android:gravity="top"
-        android:text="暫停" />
-
     <TextView
         android:id="@+id/textView"
         android:layout_width="265dp"

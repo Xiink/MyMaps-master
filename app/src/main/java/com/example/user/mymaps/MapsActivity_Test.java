@@ -50,6 +50,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -149,6 +150,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     volatile boolean stopWorker;
     private String send_text = null;
     boolean btnopen = false;
+    boolean key=false;
 
 
 
@@ -166,21 +168,32 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         mChickTextView = (TextView) findViewById(R.id.chick_text);
         textView = (TextView) findViewById(R.id.textView);
         button = (Button) findViewById(R.id.button1);
-        button2 = (Button) findViewById(R.id.button2);
-        button3 = (Button) findViewById(R.id.buttontest);
+        button2 = (Button) findViewById(R.id.buttontest);
 
+        init();
+        mRequestingLocationUpdates = true;
+        startLocationUpdates();
 
-        //開始導航
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                handler.removeCallbacks(timerDirection);
-                handler.postDelayed(timerDirection, 500);
+                if(key==false) {
+                    button.setText("暫停導航");
+                    handler.removeCallbacks(timerDirection);
+                    handler.postDelayed(timerDirection, 500);
+                    key = true;
+                }else if(key==true){
+                    button.setText("開始導航");
+                    handler.removeCallbacksAndMessages(null);
+                    handler2.removeCallbacksAndMessages(null);
+                    mRequestingLocationUpdates = false;
+                    stopLocationUpdates();
+                    key = false;
+                }
             }
         });
 
-        //暫停導航
-        button3.setOnClickListener(new View.OnClickListener() {
+        button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
@@ -191,47 +204,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     e.printStackTrace();
                 }*/
 
-
-                //handler.removeCallbacksAndMessages(null);
-                Dexter.withActivity(MapsActivity_Test.this)
-                        .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                        .withListener(new PermissionListener() {
-                            @Override
-                            public void onPermissionGranted(PermissionGrantedResponse response) {
-                                mRequestingLocationUpdates = true;
-                                startLocationUpdates();
-                                if(btnopen) {
-                                    handler2.removeCallbacks(moveMap);
-                                    handler2.postDelayed(moveMap, 500);
-                                }
-                            }
-
-                            @Override
-                            public void onPermissionDenied(PermissionDeniedResponse response) {
-                                if (response.isPermanentlyDenied()) {
-                                    // open device settings when the permission is
-                                    // denied permanently
-                                   // openSettings();
-                                }
-                            }
-
-                            @Override
-                            public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
-                                token.continuePermissionRequest();
-                            }
-                        }).check();
+                if(btnopen) {
+                    handler2.removeCallbacks(moveMap);
+                    handler2.postDelayed(moveMap, 500);
+                }
             }
         });
-
-        button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                handler.removeCallbacksAndMessages(null);
-                handler2.removeCallbacksAndMessages(null);
-            }
-        });
-
-        init();
     }
 
     private void init() {
@@ -308,6 +286,18 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                                 Toast.makeText(MapsActivity_Test.this, errorMessage, Toast.LENGTH_LONG).show();
                         }
+                    }
+                });
+    }
+
+    public void stopLocationUpdates() {
+        // Removing location updates
+        mFusedLocationClient
+                .removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        Toast.makeText(getApplicationContext(), "Location updates stopped!", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
