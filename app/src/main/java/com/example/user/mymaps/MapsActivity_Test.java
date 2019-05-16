@@ -193,12 +193,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             @Override
             public void onClick(View v) {
 
-            /*    try {
+                try {
                     findBT();
                     openBT();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }*/
+                }
 
                 if(btnopen) {
                     handler2.removeCallbacks(moveMap);
@@ -505,11 +505,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             }
                     }
                     send_text+=Km;
-                 /*   try {
-                        sendData(send_text);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }*/
+
+                    if (mmSocket.isConnected()){
+                        try {
+                            sendData(send_text);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
 
 
                     points.add(new LatLng(lat, lon));
@@ -780,11 +785,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             mmSocket.connect();
             mmOutputStream = mmSocket.getOutputStream();
             mmInputStream = mmSocket.getInputStream();
+            beginListenForData();
         } catch (Exception e) {
+            mmSocket.close();
             Log.e(TAG, "openBT: Can't connect to the device", e);
         }
 
-        beginListenForData();
+
 
 //        myLabel.setText("Bluetooth Opened");
     }
