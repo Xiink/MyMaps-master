@@ -165,6 +165,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         textView = (TextView) findViewById(R.id.textView);
         button = (Button) findViewById(R.id.button1);
         button2 = (Button) findViewById(R.id.buttontest);
+        button.setEnabled(false);
 
         init();
         mRequestingLocationUpdates = true;
@@ -193,12 +194,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             @Override
             public void onClick(View v) {
 
-                try {
+              /*  try {
                     findBT();
                     openBT();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }
+                }*/
 
                 if(btnopen) {
                     handler2.removeCallbacks(moveMap);
@@ -256,6 +257,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                         Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
                         btnopen = true;
+                        button.setEnabled(true);
                     }
                 })
                 .addOnFailureListener(this, new OnFailureListener() {
@@ -506,16 +508,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     }
                     send_text+=Km;
 
-                    if (mmSocket.isConnected()){
+              /*     if (mmSocket.isConnected()){
                         try {
                             sendData(send_text);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-                    }
-
-
-
+                    }*/
 
                     points.add(new LatLng(lat, lon));
                 }
