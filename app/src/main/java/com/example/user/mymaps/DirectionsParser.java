@@ -24,6 +24,7 @@ public class DirectionsParser {
         JSONArray jRoutes = null;
         JSONArray jLegs = null;
         JSONArray jSteps = null;
+        String AllMessage = "";
 
         try {
 
@@ -42,22 +43,33 @@ public class DirectionsParser {
                         String instructions= "";
                         String polyline = "";
                         String howlong;
+                        String howlong2;
                         String text;
+                        String Turn;
                         polyline = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("polyline")).get("points");
 
                         instructions = (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));
                         text = (String) ((JSONObject) ((JSONObject) jSteps.get(0)).get("distance")).get("text");
+                        AllMessage +=  k+"."+(((JSONObject) jSteps.get(k)).get("html_instructions"))+"\n\n";
                         howlong = "\n"+instructions;
-
+                       if(jSteps.length()>1){
+                            Turn =  (String) (((JSONObject) jSteps.get(1)).get("html_instructions"));
+                        }else{
+                            Turn =  (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));
+                        }
+                        howlong2 = "\n"+Turn;
                         List list = decodePolyline(polyline);
-
+                        //List list2 = decodePolyline(AllMessage);
+                        //String a = list2.get(0).toString();
                         //Loop for all points
                         for (int l = 0; l < list.size(); l++) {
                             HashMap<String, String> hm = new HashMap<String, String>();
                             hm.put("lat", Double.toString(((LatLng) list.get(l)).latitude));
                             hm.put("lon", Double.toString(((LatLng) list.get(l)).longitude));
                             hm.put("howlong",howlong);
+                            hm.put("Turn",howlong2);
                             hm.put("Km",text);
+                            hm.put("all",AllMessage);
                             path.add(hm);
                         }
                     }

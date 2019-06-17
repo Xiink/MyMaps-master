@@ -21,10 +21,14 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -93,7 +97,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         ActivityCompat.OnRequestPermissionsResultCallback {
 
 
-    private TextView textView;
+    private TextView textView,textViewAll;
     private Button button, button2,button3;
     private GoogleMap mMap;
     int num = 0, num2 = 0, num3 = 0;
@@ -147,9 +151,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     int counter;
     volatile boolean stopWorker;
     private String send_text = null;
+    private String all_text = null;
+    private String send_turn = null;
+    private String km_text = null;
     boolean btnopen = false;
     boolean key=false;
-
 
 
 
@@ -163,13 +169,37 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         mapFragment.getMapAsync(this);
 
         textView = (TextView) findViewById(R.id.textView);
+        textViewAll = (TextView) findViewById(R.id.textViewAll);
         button = (Button) findViewById(R.id.button1);
         button2 = (Button) findViewById(R.id.buttontest);
         button.setEnabled(false);
+        textViewAll.setVisibility(View.INVISIBLE);
 
         init();
         mRequestingLocationUpdates = true;
-        startLocationUpdates();
+
+        Dexter.withActivity(this)
+                .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                .withListener(new PermissionListener() {
+                    @Override
+                    public void onPermissionGranted(PermissionGrantedResponse response) {
+                        mRequestingLocationUpdates = true;
+                        startLocationUpdates();
+                    }
+
+                    @Override
+                    public void onPermissionDenied(PermissionDeniedResponse response) {
+                        if (response.isPermanentlyDenied()) {
+                            // open device settings when the permission is
+                            // denied permanently
+                        }
+                    }
+
+                    @Override
+                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                        token.continuePermissionRequest();
+                    }
+                }).check();
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -193,20 +223,21 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-              /*  try {
+                try {
                     findBT();
                     openBT();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }*/
-
-                if(btnopen) {
-                    handler2.removeCallbacks(moveMap);
-                    handler2.postDelayed(moveMap, 500);
                 }
+              if(btnopen) {
+                  handler2.removeCallbacks(moveMap);
+                  handler2.postDelayed(moveMap, 500);
+              }
+
             }
         });
+
+
     }
 
     private void init() {
@@ -258,6 +289,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
                         btnopen = true;
                         button.setEnabled(true);
+
                     }
                 })
                 .addOnFailureListener(this, new OnFailureListener() {
@@ -464,6 +496,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                     //印出導航資訊
                     String howlong = point.get("howlong");
+                    String AllMessage = point.get("all");
+                    String Turn = point.get("Turn");
                     String Km = point.get("Km");
                     //正則
                     howlong = howlong.replace("<b>", " ");
@@ -474,7 +508,25 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     howlong = howlong.replace("</b>", " ");
                     howlong = howlong.replace("</div>", " ");
                     howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    //textView.setText(howlong);
+
+                    AllMessage = AllMessage.replace("<b>", " ");
+                    AllMessage = AllMessage.replace("</b>", " ");
+                    AllMessage = AllMessage.replace("</div>", " ");
+                    AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                    AllMessage = AllMessage.replace("<b>", " ");
+                    AllMessage = AllMessage.replace("</b>", " ");
+                    AllMessage = AllMessage.replace("</div>", " ");
+                    AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+
+                    Turn = Turn.replace("<b>", " ");
+                    Turn = Turn.replace("</b>", " ");
+                    Turn = Turn.replace("</div>", " ");
+                    Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                    Turn = Turn.replace("<b>", " ");
+                    Turn = Turn.replace("</b>", " ");
+                    Turn = Turn.replace("</div>", " ");
+                    Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+
                     switch (howlong.charAt(1)) {
                         case 'H':
                             send_text = "H";
@@ -506,28 +558,46 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                     }
                             }
                     }
-                    send_text+=Km;
 
-              /*     if (mmSocket.isConnected()){
-                        try {
-                            sendData(send_text);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }*/
-
+                    switch (Turn.charAt(1)) {
+                        case 'T':
+                            send_turn = "T";
+                            switch (Turn.charAt(7)) {
+                                case 'r':
+                                case 'R':
+                                    send_turn += "R";
+                                    break;
+                                case 'l':
+                                case 'L':
+                                    send_turn += "L";
+                                    break;
+                            }
+                    }
+                    km_text = Km;
+                    all_text = AllMessage;
                     points.add(new LatLng(lat, lon));
                 }
 
                 polylineOptions.addAll(points);
                 polylineOptions.width(15);
-                polylineOptions.color(Color.BLUE);
+                polylineOptions.color(Color.GREEN);
                 polylineOptions.geodesic(true);
             }
 
-            Log.e(TAG, "onPostExecute: SEND_DATA: " + send_text);
-            textView.setText(send_text);
+            send_text+=km_text;
+            send_turn+=km_text;
 
+                   if (mmSocket.isConnected()){
+                        try {
+                            sendData(send_turn);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+            Log.e(TAG, "onPostExecute: SEND_DATA: " + send_turn);
+            textView.setText(send_turn);
+            textViewAll.setText(all_text);
             if (polylineOptions != null) {
                 mMap.addPolyline(polylineOptions);
             } else {
@@ -564,37 +634,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     @Override
     public boolean onMyLocationButtonClick() {
-        Toast.makeText(this, "MyLocation button clicked", Toast.LENGTH_SHORT).show();
-        // Return false so that we don't consume the event and the default behavior still occurs
-        // (the camera animates to the user's current position).
-        if (num2 == 0) {
-            latLng1 = new LatLng(mMap.getCameraPosition().target.latitude, mMap.getCameraPosition().target.longitude);
-            markerOptions2.position(new LatLng(latLng1.latitude, latLng1.longitude));
-            markerOptions2.title("Origin!");
-            markerOptions2.draggable(true);
-            mMap.addMarker(markerOptions2);
-            num2++;
-        } else if (num == 0 && num2 != 0) {
-            latLng1 = new LatLng(0, 0);
-            mMap.clear();
-            num2 = 0;
-        } else if (num != 0 && num2 != 0) {
-            mMap.clear();
-            latLng1 = new LatLng(mMap.getCameraPosition().target.latitude, mMap.getCameraPosition().target.longitude);
-            markerOptions1.position(new LatLng(latLng2.latitude, latLng2.longitude));
-            markerOptions1.title("Destination!");
-            markerOptions1.draggable(true);
-            markerOptions2.position(new LatLng(latLng1.latitude, latLng1.longitude));
-            markerOptions2.title("Origin!");
-            markerOptions2.draggable(true);
-            mMap.addMarker(markerOptions1);
-            mMap.addMarker(markerOptions2);
-            num2++;
-            String url = getRequestUrl(latLng1, latLng2);
-            TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
-            taskRequestDirections.execute(url);
-        }
-
+      if(textViewAll.getVisibility()==View.VISIBLE)
+          textViewAll.setVisibility(View.INVISIBLE);
+      else
+          textViewAll.setVisibility(View.VISIBLE);
         return false;
     }
 
@@ -604,7 +647,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         public void run() {
             mMap.clear();
             latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
+            //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
             markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
             markerOptions1.title("Destination!");
             markerOptions1.draggable(true);
@@ -629,7 +672,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     void updateMyLocation(Location mylocation){
         latLng1 = new LatLng(mylocation.getLatitude(),mylocation.getLongitude());
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
     }
 
 
