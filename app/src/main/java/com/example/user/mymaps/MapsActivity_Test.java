@@ -855,7 +855,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
         }
-        if ( mBluetoothAdapter.isEnabled()){
+        else {
 
         }
     }
@@ -872,7 +872,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
-            findBT();
+
         }
         //藍芽開啟狀態
         if (mBluetoothAdapter.isEnabled()) {
