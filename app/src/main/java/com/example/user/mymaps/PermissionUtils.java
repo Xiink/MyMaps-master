@@ -29,12 +29,16 @@ import android.widget.Toast;
 
 /**
  * Utility class for access to runtime permissions.
+ *
+ * APP運行時所需權限的底層class
  */
 public abstract class PermissionUtils {
 
     /**
      * Requests the fine location permission. If a rationale with an additional explanation should
      * be shown to the user, displays a dialog that triggers the request.
+     *
+     * 請求定位權限，如有需要額外說明應該顯示給使用者並且顯示請求對話框
      */
     public static void requestPermission(AppCompatActivity activity, int requestId,
                                          String permission, boolean finishActivity) {
@@ -54,6 +58,10 @@ public abstract class PermissionUtils {
      * permission from a runtime permissions request.
      *
      * @see android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback
+     *
+     *檢查結果是否包含運行時權限請求的權限結果(被授權 #PERMISSION_GRANTED)
+     *
+     *
      */
     public static boolean isPermissionGranted(String[] grantPermissions, int[] grantResults,
                                               String permission) {
@@ -67,6 +75,8 @@ public abstract class PermissionUtils {
 
     /**
      * A dialog that displays a permission denied message.
+     *
+     * 顯示權限被拒絕的對話框
      */
     public static class PermissionDeniedDialog extends DialogFragment {
 
@@ -77,6 +87,8 @@ public abstract class PermissionUtils {
         /**
          * Creates a new instance of this dialog and optionally finishes the calling Activity
          * when the 'Ok' button is clicked.
+         *
+         *創建此對話框的新實例，並可選擇在單擊“確定”按鈕時完成調用活動。
          */
         public static PermissionDeniedDialog newInstance(boolean finishActivity) {
             Bundle arguments = new Bundle();
@@ -115,6 +127,8 @@ public abstract class PermissionUtils {
      * The activity should implement
      * {@link android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback}
      * to handle permit or denial of this permission request.
+     *
+     * 一個對話框來解釋位置權限的使用並請求必要的權限。
      */
     public static class RationaleDialog extends DialogFragment {
 
@@ -135,6 +149,8 @@ public abstract class PermissionUtils {
          *                       {@link android.support.v4.app.ActivityCompat.OnRequestPermissionsResultCallback}.
          * @param finishActivity Whether the calling Activity should be finished if the dialog is
          *                       cancelled.
+         *
+         *建立一個對話框的新實例，解釋顯示使用位置權限的基本原理
          */
         public static RationaleDialog newInstance(int requestCode, boolean finishActivity) {
             Bundle arguments = new Bundle();

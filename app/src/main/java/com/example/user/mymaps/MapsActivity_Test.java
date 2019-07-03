@@ -5,8 +5,11 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -22,6 +25,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -74,6 +78,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -97,8 +102,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         ActivityCompat.OnRequestPermissionsResultCallback {
 
 
-    private TextView textView,textViewAll;
-    private Button button, button2,button3;
+    private TextView textView, textViewAll;
+    private Button button, button2, button3;
     private GoogleMap mMap;
     int num = 0, num2 = 0, num3 = 0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -138,25 +143,27 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private Boolean mRequestingLocationUpdates;
 
     private static final String TAG = MapsActivity_Test.class.getSimpleName();
+    boolean key = false;
 
-
+    //-------------BT------------
+    private int REQUEST_ENABLE_BT = 1;
     BluetoothAdapter mBluetoothAdapter;
+    public ArrayList<BluetoothDevice> mBTDevices = new ArrayList<>();
     BluetoothSocket mmSocket;
-    BluetoothDevice mmDevice;
+    BluetoothDevice mmDevice = null;
+    BluetoothDevice btDevice_Target;
     OutputStream mmOutputStream;
     InputStream mmInputStream;
     Thread workerThread;
     byte[] readBuffer;
     int readBufferPosition;
-    int counter;
     volatile boolean stopWorker;
     private String send_text = null;
     private String all_text = null;
     private String send_turn = null;
     private String km_text = null;
     boolean btnopen = false;
-    boolean key=false;
-
+    //-------------BT------------
 
 
     @Override
@@ -204,12 +211,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(key==false) {
+                if (key == false) {
                     button.setText("暫停導航");
                     handler.removeCallbacks(timerDirection);
                     handler.postDelayed(timerDirection, 500);
                     key = true;
-                }else if(key==true){
+                } else if (key == true) {
                     button.setText("開始導航");
                     handler.removeCallbacksAndMessages(null);
                     handler2.removeCallbacksAndMessages(null);
@@ -224,15 +231,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             @Override
             public void onClick(View v) {
                 try {
-                    findBT();
                     openBT();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-              if(btnopen) {
-                  handler2.removeCallbacks(moveMap);
-                  handler2.postDelayed(moveMap, 500);
-              }
+                if (btnopen) {
+                    handler2.removeCallbacks(moveMap);
+                    handler2.postDelayed(moveMap, 500);
+                }
 
             }
         });
@@ -264,6 +270,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
         builder.addLocationRequest(mLocationRequest);
         mLocationSettingsRequest = builder.build();
+
+        enableMyBluetooth();
+        findBT();
     }
 
     /**
@@ -584,16 +593,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 polylineOptions.geodesic(true);
             }
 
-            send_text+=km_text;
-            send_turn+=km_text;
+            send_text += km_text;
+            send_turn += km_text;
 
-                   if (mmSocket.isConnected()){
-                        try {
-                            sendData(send_turn);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+            if (mmSocket.isConnected()) {
+                try {
+                    sendData(send_turn);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
             Log.e(TAG, "onPostExecute: SEND_DATA: " + send_turn);
             textView.setText(send_turn);
@@ -634,10 +643,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     @Override
     public boolean onMyLocationButtonClick() {
-      if(textViewAll.getVisibility()==View.VISIBLE)
-          textViewAll.setVisibility(View.INVISIBLE);
-      else
-          textViewAll.setVisibility(View.VISIBLE);
+        if (textViewAll.getVisibility() == View.VISIBLE)
+            textViewAll.setVisibility(View.INVISIBLE);
+        else
+            textViewAll.setVisibility(View.VISIBLE);
         return false;
     }
 
@@ -646,7 +655,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         @Override
         public void run() {
             mMap.clear();
-            latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
+            latLng1 = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
             //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
             markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
             markerOptions1.title("Destination!");
@@ -665,13 +674,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private Runnable moveMap = new Runnable() {
         @Override
         public void run() {
-            latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
+            latLng1 = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1, 15.0f));
         }
     };
 
-    void updateMyLocation(Location mylocation){
-        latLng1 = new LatLng(mylocation.getLatitude(),mylocation.getLongitude());
+    void updateMyLocation(Location mylocation) {
+        latLng1 = new LatLng(mylocation.getLatitude(), mylocation.getLongitude());
         //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
     }
 
@@ -679,11 +688,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     LocationListener myListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            if(location!=null) {
+            if (location != null) {
                 mylocation = location;
-                button.setText(location+"");
-            }
-            else
+                button.setText(location + "");
+            } else
                 button.setText("NULL");
 
             button.setText("TRUE");
@@ -715,11 +723,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         // TODO Auto-generated method stub
         super.onDestroy();
 
-        try {
-            closeBT();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (mBluetoothAdapter.isEnabled()) {
+            try {
+                closeBT();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
         String best = mLocationManager.getBestProvider(criteria, true);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -783,63 +794,149 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
 
 
+    /*---------------------------------------------BT------------------------------------------------*/
 
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            // When discovery finds a device
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Get the BluetoothDevice object from the Intent
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                // Add the name and address to an array adapter to show in a ListView
+                if (device.getName().equals("ESP32test")){
+                    mBluetoothAdapter.cancelDiscovery();
+                    btDevice_Target = device;
+                    if (btDevice_Target.getBondState() != BluetoothDevice.BOND_BONDED){
+                        try {
+                            createBond();
+                            mmDevice = btDevice_Target;
+                            Toast.makeText(getApplicationContext(),"已連接藍芽設備", Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
 
-
-
-    /**     搜尋並配對 ESP32test 設備*/
-    void findBT() {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        /**     確認有無藍芽功能*/
-        if (mBluetoothAdapter == null) {
-            //myLabel.setText("No bluetooth adapter available");
-            Toast.makeText(this,"當前設備並無藍芽功能",Toast.LENGTH_LONG).show();
+                //mBTDevices.add(device);
+                //Log.d(TAG, "onReceive: " + device.getName() + ": " + device.getAddress());
+            }
         }
+    };
 
-        /**     確認當前有無開啟藍芽，若無則發送請求開啟藍芽*/
+    private void createBond() throws Exception{
+        Method createBondMethod = btDevice_Target.getClass().getMethod("createBond");
+        createBondMethod.invoke(btDevice_Target);
+    }
+
+    private void enableMyBluetooth() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        /**
+         * 確認有無藍芽功能
+         */
+        if (mBluetoothAdapter == null) {
+            new AlertDialog.Builder(this)
+                    .setCancelable(false)
+                    .setTitle("抱歉!")
+                    .setMessage("此裝置並不支援藍芽功能")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Toast.makeText(getApplicationContext(), "GOGO", Toast.LENGTH_SHORT).show();
+                            System.exit(0);
+                        }
+                    })
+                    .show();
+        }
+        /**
+         *已經確認有藍芽設備且沒有開啟藍芽時，會發送請求開啟藍芽
+         */
+        else if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
+        }
+        if ( mBluetoothAdapter.isEnabled()){
+
+        }
+    }
+
+
+    /**
+     * 搜尋並配對 ESP32test 設備
+     */
+    void findBT() {
+        /**
+         * 有開啟藍芽，且有搜尋到指定設備則連接
+         */
+        //藍芽關閉狀態
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBluetooth, 0);
+            startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
+            findBT();
         }
-
-        /**     有開啟藍芽，且有搜尋到指定設備則連接*/
-        if (mBluetoothAdapter.isEnabled()){
+        //藍芽開啟狀態
+        if (mBluetoothAdapter.isEnabled()) {
             Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
             if (pairedDevices.size() > 0) {
                 for (BluetoothDevice device : pairedDevices) {
                     if (device.getName().equals("ESP32test")) {
                         mmDevice = device;
+                        Toast.makeText(this, "已連接藍芽設備", Toast.LENGTH_LONG).show();
                         break;
                     }
                 }
             }
-            Toast.makeText(this,"已連接藍芽設備",Toast.LENGTH_LONG).show();
+
+            if (mmDevice == null){
+                if (mBluetoothAdapter.isDiscovering()) {
+                    mBluetoothAdapter.cancelDiscovery();
+                    Log.d(TAG, "Canceling discovery.");
+
+                    mBluetoothAdapter.startDiscovery();
+                    IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                    registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
+                }
+                if (!mBluetoothAdapter.isDiscovering()) {
+
+                    mBluetoothAdapter.startDiscovery();
+                    IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                    registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
+                }
+            }
+
 //            myLabel.setText("Bluetooth Device Found");
         }
     }
 
-    /**     設備連接*/
-    void openBT() throws IOException{
+    /**
+     * 設備連接
+     */
+    void openBT() throws IOException {
         UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); /**        Standard SerialPortService ID*/
-        try {
-            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-            mmSocket.connect();
-            mmOutputStream = mmSocket.getOutputStream();
-            mmInputStream = mmSocket.getInputStream();
-            beginListenForData();
-        } catch (Exception e) {
-            mmSocket.close();
-            Log.e(TAG, "openBT: Can't connect to the device", e);
+        if (mmDevice != null) {
+            try {
+                mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+                mmSocket.connect();
+                mmOutputStream = mmSocket.getOutputStream();
+                mmInputStream = mmSocket.getInputStream();
+                beginListenForData();
+            } catch (Exception e) {
+                mmSocket.close();
+                Log.e(TAG, "openBT: Can't connect to the device", e);
+            }
         }
-
+        else {
+            Toast.makeText(this,"設備尚未開啟",Toast.LENGTH_SHORT);
+        }
 
 
 //        myLabel.setText("Bluetooth Opened");
     }
 
 
-    /**     資料監聽*/
+    /**
+     * 資料監聽
+     */
     void beginListenForData() {
         final Handler handler = new Handler();
         final byte delimiter = 10; //This is the ASCII code for a newline character
@@ -883,7 +980,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         workerThread.start();
     }
 
-    /**     傳送資料*/
+    /**
+     * 傳送資料
+     */
     void sendData(String s) throws IOException {
         String msg = s;
         msg += "\n";
@@ -891,7 +990,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 //        myLabel.setText("Data Sent");
     }
 
-    /**     斷開設備*/
+    /**
+     * 斷開設備
+     */
     void closeBT() throws IOException {
         stopWorker = true;
         mmOutputStream.close();
@@ -901,11 +1002,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
 
-
-
-
-
-
+    /*---------------------------------------------BT------------------------------------------------*/
 
 
 }
