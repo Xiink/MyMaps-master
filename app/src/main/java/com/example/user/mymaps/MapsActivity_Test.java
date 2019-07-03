@@ -24,15 +24,11 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,12 +47,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolygonOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -73,14 +65,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -88,12 +77,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
-
-import butterknife.BindView;
-import butterknife.OnClick;
 
 
 public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.OnMyLocationButtonClickListener,
@@ -147,11 +131,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     //-------------BT------------
     private int REQUEST_ENABLE_BT = 1;
+    final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); /**        Standard SerialPortService ID*/
     BluetoothAdapter mBluetoothAdapter;
     public ArrayList<BluetoothDevice> mBTDevices = new ArrayList<>();
     BluetoothSocket mmSocket;
     BluetoothDevice mmDevice = null;
-    BluetoothDevice btDevice_Target;
     OutputStream mmOutputStream;
     InputStream mmInputStream;
     Thread workerThread;
@@ -722,6 +706,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     protected void onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy();
+        unregisterReceiver(mBroadcastReceiver);
 
         if (mBluetoothAdapter.isEnabled()) {
             try {
@@ -796,38 +781,26 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     /*---------------------------------------------BT------------------------------------------------*/
 
+    //尋找配對
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
+            final String action = intent.getAction();
             // When discovery finds a device
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 // Add the name and address to an array adapter to show in a ListView
-                if (device.getName().equals("ESP32test")){
+                if (device.getName().equals("ESP32test")) {
                     mBluetoothAdapter.cancelDiscovery();
-                    btDevice_Target = device;
-                    if (btDevice_Target.getBondState() != BluetoothDevice.BOND_BONDED){
-                        try {
-                            createBond();
-                            mmDevice = btDevice_Target;
-                            Toast.makeText(getApplicationContext(),"已連接藍芽設備", Toast.LENGTH_LONG).show();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                    if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                        device.createBond();
                     }
                 }
-
-                //mBTDevices.add(device);
-                //Log.d(TAG, "onReceive: " + device.getName() + ": " + device.getAddress());
             }
         }
     };
 
-    private void createBond() throws Exception{
-        Method createBondMethod = btDevice_Target.getClass().getMethod("createBond");
-        createBondMethod.invoke(btDevice_Target);
-    }
 
     private void enableMyBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -855,14 +828,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
         }
-        else {
-
-        }
     }
 
 
     /**
-     * 搜尋並配對 ESP32test 設備
+     * 搜尋 ESP32test 設備
      */
     void findBT() {
         /**
@@ -872,7 +842,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
-
         }
         //藍芽開啟狀態
         if (mBluetoothAdapter.isEnabled()) {
@@ -881,17 +850,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 for (BluetoothDevice device : pairedDevices) {
                     if (device.getName().equals("ESP32test")) {
                         mmDevice = device;
-                        Toast.makeText(this, "已連接藍芽設備", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "已配對過", Toast.LENGTH_LONG).show();
                         break;
                     }
                 }
             }
-
-            if (mmDevice == null){
+            //沒連線過開啟搜尋功能去尋找配對
+            if (mmDevice == null) {
                 if (mBluetoothAdapter.isDiscovering()) {
                     mBluetoothAdapter.cancelDiscovery();
                     Log.d(TAG, "Canceling discovery.");
-
                     mBluetoothAdapter.startDiscovery();
                     IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_FOUND);
                     registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
@@ -903,8 +871,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
                 }
             }
-
-//            myLabel.setText("Bluetooth Device Found");
         }
     }
 
@@ -912,7 +878,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
      * 設備連接
      */
     void openBT() throws IOException {
-        UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); /**        Standard SerialPortService ID*/
         if (mmDevice != null) {
             try {
                 mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
@@ -921,16 +886,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 mmInputStream = mmSocket.getInputStream();
                 beginListenForData();
             } catch (Exception e) {
+                Toast.makeText(getApplicationContext(), "設備尚未開啟", Toast.LENGTH_LONG).show();
                 mmSocket.close();
+                Log.d(TAG, "doInBackground: SocketClose!");
                 Log.e(TAG, "openBT: Can't connect to the device", e);
             }
+        } else {
+            Log.d(TAG, "openBT: Not already");
+            findBT();
         }
-        else {
-            Toast.makeText(this,"設備尚未開啟",Toast.LENGTH_SHORT);
-        }
-
-
-//        myLabel.setText("Bluetooth Opened");
     }
 
 
@@ -1000,6 +964,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         mmSocket.close();
 //        myLabel.setText("Bluetooth Closed");
     }
+
+
 
 
     /*---------------------------------------------BT------------------------------------------------*/
