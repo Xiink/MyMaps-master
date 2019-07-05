@@ -234,12 +234,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*try {
+                try {
                     findBT();
                     openBT();
                 } catch (IOException e) {
                     e.printStackTrace();
-                }*/
+                }
               if(btnopen) {
                   handler2.removeCallbacks(moveMap);
                   handler2.postDelayed(moveMap, 500);
