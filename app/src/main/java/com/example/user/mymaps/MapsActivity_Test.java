@@ -5,8 +5,11 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -22,13 +25,16 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -100,6 +106,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private TextView textView,textViewAll;
     private Button button, button2,button3;
     private GoogleMap mMap;
+    private Switch switch1;
     int num = 0, num2 = 0, num3 = 0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     private boolean mPermissionDenied = false;
@@ -108,10 +115,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     Handler handler = new Handler();
     Handler handler2 = new Handler();
 
-    LocationManager mLocationManager;
-
-    Location mylocation;
-    Criteria criteria;
 
     // location last updated time
     private String mLastUpdateTime;
@@ -138,24 +141,27 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private Boolean mRequestingLocationUpdates;
 
     private static final String TAG = MapsActivity_Test.class.getSimpleName();
+    boolean key = false;
 
-
+    //-------------BT------------
+    private int REQUEST_ENABLE_BT = 1;
+    final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); /**        Standard SerialPortService ID*/
     BluetoothAdapter mBluetoothAdapter;
+    public ArrayList<BluetoothDevice> mBTDevices = new ArrayList<>();
     BluetoothSocket mmSocket;
-    BluetoothDevice mmDevice;
+    BluetoothDevice mmDevice = null;
     OutputStream mmOutputStream;
     InputStream mmInputStream;
     Thread workerThread;
     byte[] readBuffer;
     int readBufferPosition;
-    int counter;
     volatile boolean stopWorker;
     private String send_text = null;
     private String all_text = null;
     private String send_turn = null;
     private String km_text = null;
     boolean btnopen = false;
-    boolean key=false;
+    //-------------BT------------
 
 
 
@@ -174,16 +180,21 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         button2 = (Button) findViewById(R.id.buttontest);
         button.setEnabled(false);
         textViewAll.setVisibility(View.INVISIBLE);
+        button.setVisibility(View.INVISIBLE);
+        button2.setVisibility(View.INVISIBLE);
+        switch1 = (Switch) findViewById(R.id.switch1);
 
         init();
         mRequestingLocationUpdates = true;
 
+        /**請求取得位置權限*/
         Dexter.withActivity(this)
                 .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
                 .withListener(new PermissionListener() {
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse response) {
                         mRequestingLocationUpdates = true;
+                        /**成功開始呼叫位置更新函式*/
                         startLocationUpdates();
                     }
 
@@ -237,9 +248,21 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             }
         });
 
+        switch1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(switch1.isChecked()){
+                    button.setVisibility(View.VISIBLE);
+                    button2.setVisibility(View.VISIBLE);
+                }else{
+                    button.setVisibility(View.INVISIBLE);
+                    button2.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
 
     }
-
+    /**位置設定*/
     private void init() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mSettingsClient = LocationServices.getSettingsClient(this);
@@ -266,11 +289,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         mLocationSettingsRequest = builder.build();
     }
 
-    /**
-     * Starting location updates
-     * Check whether location settings are satisfied and then
-     * location updates will be requested
-     */
+    /**開始Location更新*/
     private void startLocationUpdates() {
         mSettingsClient
                 .checkLocationSettings(mLocationSettingsRequest)
@@ -319,7 +338,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     }
                 });
     }
-
+    /**停止Location更新*/
     public void stopLocationUpdates() {
         // Removing location updates
         mFusedLocationClient
@@ -362,28 +381,33 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     LatLng latLng1, latLng2, latLng3;
 
     //點擊地圖
-    @Override
-    public void onMapClick(LatLng point) {
-        if (num == 0) {
-            //建立標記並加入地圖中
-            markerOptions1.position(new LatLng(point.latitude, point.longitude));
-            markerOptions1.title("Destination!");
-            markerOptions1.draggable(true);
-            mMap.addMarker(markerOptions1);
-            latLng2 = new LatLng(point.latitude, point.longitude);
-            //備份座標點
-            latLng3 = latLng2;
-            String url = getRequestUrl(latLng1, latLng2);
-            //串接導航API
-            TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
-            taskRequestDirections.execute(url);
-            num++;
-        } else if (num != 0) {
-            //初始化
-            latLng2 = new LatLng(0, 0);
-            latLng3 = new LatLng(0, 0);
-            num = 0;
-            mMap.clear();
+                @Override
+                public void onMapClick(LatLng point) {
+                    if(key!=true) {
+                        if (num == 0) {
+                //建立標記並加入地圖中
+                markerOptions1.position(new LatLng(point.latitude, point.longitude));
+                markerOptions1.title("Destination!");
+                markerOptions1.draggable(true);
+                mMap.addMarker(markerOptions1);
+                latLng2 = new LatLng(point.latitude, point.longitude);
+                //備份座標點
+                latLng3 = latLng2;
+                String url = getRequestUrl(latLng1, latLng2);
+                //串接導航API
+                TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+                taskRequestDirections.execute(url);
+                num++;
+            } else if (num != 0) {
+                //初始化
+                latLng2 = new LatLng(0, 0);
+                latLng3 = new LatLng(0, 0);
+                num = 0;
+                mMap.clear();
+                textView.setText("");
+            }
+        }else{
+            Toast.makeText(getApplicationContext(), "請先暫停導航在選擇目的地", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -415,6 +439,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.connect();
 
+            //Get the response result
             inputStream = httpURLConnection.getInputStream();
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
@@ -481,7 +506,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> lists) {
             //Get list route and display it into the map
-
             ArrayList points = null;
 
             PolylineOptions polylineOptions = null;
@@ -572,28 +596,64 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                     send_turn += "L";
                                     break;
                             }
+                            break;
+                        case 'S':
+                            send_turn = "T";
+                            switch (Turn.charAt(9)) {
+                                case 'r':
+                                case 'R':
+                                    send_turn += "R";
+                                    break;
+                                case 'l':
+                                case 'L':
+                                    send_turn += "L";
+                                    break;
+                            }
+                            break;
+                        case 'H':
+                            send_turn = "H";
+                            switch (Turn.charAt(7)) {
+                                case 'n':
+                                    send_turn += "N";
+                                    break;
+                                case 's':
+                                    send_turn += "S";
+                                    break;
+                                case 'w':
+                                    send_turn += "W";
+                                    break;
+                                case 'h':
+                                    send_turn += "H";
+                                    break;
+                            }
+                            break;
+                        case  'M':
+                            switch (Turn.charAt(9)){
+                                case 'U':
+                                    send_turn = "TU";
+                            }
+                            break;
                     }
                     km_text = Km;
                     all_text = AllMessage;
                     points.add(new LatLng(lat, lon));
                 }
-
+                //繪製路線
                 polylineOptions.addAll(points);
                 polylineOptions.width(15);
                 polylineOptions.color(Color.GREEN);
                 polylineOptions.geodesic(true);
             }
-
             send_text+=km_text;
             send_turn+=km_text;
 
-                   if (mmSocket.isConnected()){
-                        try {
-                            sendData(send_turn);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+            if (mmSocket.isConnected()){
+                try {
+                    sendData(send_turn);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
             Log.e(TAG, "onPostExecute: SEND_DATA: " + send_turn);
             textView.setText(send_turn);
@@ -609,12 +669,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     @Override
     public void onMapLongClick(LatLng point) {
-        //mChickTextView.setText("long pressed, point=" + point);
     }
 
     @Override
     public void onCameraIdle() {
-        //mMyTextView.setText(mMap.getCameraPosition().toString());
     }
 
     /**
@@ -647,18 +705,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         public void run() {
             mMap.clear();
             latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
-            //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
             markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
             markerOptions1.title("Destination!");
             markerOptions1.draggable(true);
-            markerOptions2.position(new LatLng(latLng1.latitude, latLng1.longitude));
-            markerOptions2.title("Origin!");
-            markerOptions2.draggable(true);
             mMap.addMarker(markerOptions1);
             String url = getRequestUrl(latLng1, latLng2);
             TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
             taskRequestDirections.execute(url);
-            handler.postDelayed(timerDirection, 500);
+            handler.postDelayed(timerDirection, 1500);
         }
     };
 
@@ -670,68 +724,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         }
     };
 
-    void updateMyLocation(Location mylocation){
-        latLng1 = new LatLng(mylocation.getLatitude(),mylocation.getLongitude());
-        //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1,15.0f));
-    }
-
-
-    LocationListener myListener = new LocationListener() {
-        @Override
-        public void onLocationChanged(Location location) {
-            if(location!=null) {
-                mylocation = location;
-                button.setText(location+"");
-            }
-            else
-                button.setText("NULL");
-
-            button.setText("TRUE");
-
-            mLocationManager.removeUpdates(myListener);
-            updateMyLocation(mylocation);
-
-        }
-
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {
-            button.setText("TRUE");
-        }
-
-        @Override
-        public void onProviderEnabled(String provider) {
-            button.setText("TRUE");
-        }
-
-        @Override
-        public void onProviderDisabled(String provider) {
-            button.setText("TRUE");
-        }
-    };
-
 
     @Override
     protected void onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy();
-
         try {
             closeBT();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String best = mLocationManager.getBestProvider(criteria, true);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        mLocationManager.requestLocationUpdates(best, 1000, 10, myListener);
     }
 
 
@@ -741,105 +743,128 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
-            return;
-        }
+    /*---------------------------------------------BT------------------------------------------------*/
 
-        if (PermissionUtils.isPermissionGranted(permissions, grantResults,
-                Manifest.permission.ACCESS_FINE_LOCATION)) {
-            // Enable the my location layer if the permission has been granted.
-            enableMyLocation();
-        } else {
-            // Display the missing permission error dialog when the fragments resume.
-            mPermissionDenied = true;
+    //尋找配對
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            // When discovery finds a device
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                // Get the BluetoothDevice object from the Intent
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                // Add the name and address to an array adapter to show in a ListView
+                if (device.getName().equals("ESP32test")) {
+                    mBluetoothAdapter.cancelDiscovery();
+                    if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                        device.createBond();
+                    }
+                }
+            }
         }
-    }
+    };
 
-    @Override
-    protected void onResumeFragments() {
-        super.onResumeFragments();
-        if (mPermissionDenied) {
-            // Permission was not granted, display error dialog.
-            showMissingPermissionError();
-            mPermissionDenied = false;
+
+    private void enableMyBluetooth() {
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        /**
+         * 確認有無藍芽功能
+         */
+        if (mBluetoothAdapter == null) {
+            new AlertDialog.Builder(this)
+                    .setCancelable(false)
+                    .setTitle("抱歉!")
+                    .setMessage("此裝置並不支援藍芽功能")
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Toast.makeText(getApplicationContext(), "GOGO", Toast.LENGTH_SHORT).show();
+                            System.exit(0);
+                        }
+                    })
+                    .show();
+        }
+        /**
+         *已經確認有藍芽設備且沒有開啟藍芽時，會發送請求開啟藍芽
+         */
+        else if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
         }
     }
 
 
     /**
-     * Displays a dialog with error message explaining that the location permission is missing.
+     * 搜尋 ESP32test 設備
      */
-    private void showMissingPermissionError() {
-        PermissionUtils.PermissionDeniedDialog
-                .newInstance(true).show(getSupportFragmentManager(), "dialog");
-    }
-
-
-
-
-
-
-
-
-
-
-
-    /**     搜尋並配對 ESP32test 設備*/
     void findBT() {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        /**     確認有無藍芽功能*/
-        if (mBluetoothAdapter == null) {
-            //myLabel.setText("No bluetooth adapter available");
-            Toast.makeText(this,"當前設備並無藍芽功能",Toast.LENGTH_LONG).show();
-        }
-
-        /**     確認當前有無開啟藍芽，若無則發送請求開啟藍芽*/
+        /**
+         * 有開啟藍芽，且有搜尋到指定設備則連接
+         */
+        //藍芽關閉狀態
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBluetooth, 0);
+            startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
         }
-
-        /**     有開啟藍芽，且有搜尋到指定設備則連接*/
-        if (mBluetoothAdapter.isEnabled()){
+        //藍芽開啟狀態
+        if (mBluetoothAdapter.isEnabled()) {
             Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
             if (pairedDevices.size() > 0) {
                 for (BluetoothDevice device : pairedDevices) {
                     if (device.getName().equals("ESP32test")) {
                         mmDevice = device;
+                        Toast.makeText(this, "已配對過", Toast.LENGTH_LONG).show();
                         break;
                     }
                 }
             }
-            Toast.makeText(this,"已連接藍芽設備",Toast.LENGTH_LONG).show();
-//            myLabel.setText("Bluetooth Device Found");
+            //沒連線過開啟搜尋功能去尋找配對
+            if (mmDevice == null) {
+                if (mBluetoothAdapter.isDiscovering()) {
+                    mBluetoothAdapter.cancelDiscovery();
+                    Log.d(TAG, "Canceling discovery.");
+                    mBluetoothAdapter.startDiscovery();
+                    IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                    registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
+                }
+                if (!mBluetoothAdapter.isDiscovering()) {
+
+                    mBluetoothAdapter.startDiscovery();
+                    IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                    registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
+                }
+            }
         }
     }
 
-    /**     設備連接*/
-    void openBT() throws IOException{
-        UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); /**        Standard SerialPortService ID*/
-        try {
-            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-            mmSocket.connect();
-            mmOutputStream = mmSocket.getOutputStream();
-            mmInputStream = mmSocket.getInputStream();
-            beginListenForData();
-        } catch (Exception e) {
-            mmSocket.close();
-            Log.e(TAG, "openBT: Can't connect to the device", e);
+    /**
+     * 設備連接
+     */
+    void openBT() throws IOException {
+        if (mmDevice != null) {
+            try {
+                mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+                mmSocket.connect();
+                mmOutputStream = mmSocket.getOutputStream();
+                mmInputStream = mmSocket.getInputStream();
+                beginListenForData();
+            } catch (Exception e) {
+                Toast.makeText(getApplicationContext(), "設備尚未開啟", Toast.LENGTH_LONG).show();
+                mmSocket.close();
+                Log.d(TAG, "doInBackground: SocketClose!");
+                Log.e(TAG, "openBT: Can't connect to the device", e);
+            }
+        } else {
+            Log.d(TAG, "openBT: Not already");
+            findBT();
         }
-
-
-
-//        myLabel.setText("Bluetooth Opened");
     }
 
 
-    /**     資料監聽*/
+    /**
+     * 資料監聽
+     */
     void beginListenForData() {
         final Handler handler = new Handler();
         final byte delimiter = 10; //This is the ASCII code for a newline character
@@ -883,7 +908,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         workerThread.start();
     }
 
-    /**     傳送資料*/
+    /**
+     * 傳送資料
+     */
     void sendData(String s) throws IOException {
         String msg = s;
         msg += "\n";
@@ -891,7 +918,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 //        myLabel.setText("Data Sent");
     }
 
-    /**     斷開設備*/
+    /**
+     * 斷開設備
+     */
     void closeBT() throws IOException {
         stopWorker = true;
         mmOutputStream.close();
@@ -900,16 +929,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 //        myLabel.setText("Bluetooth Closed");
     }
 
-
-
-
-
-
-
-
+    /*---------------------------------------------BT------------------------------------------------*/
 
 }
-
 
 
 

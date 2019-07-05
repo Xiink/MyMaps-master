@@ -48,10 +48,11 @@ public class DirectionsParser {
                         String Turn;
                         polyline = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("polyline")).get("points");
 
-                        instructions = (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));
-                        text = (String) ((JSONObject) ((JSONObject) jSteps.get(0)).get("distance")).get("text");
+                        instructions = (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));//抓取路線資訊
+                        text = (String) ((JSONObject) ((JSONObject) jSteps.get(0)).get("distance")).get("text");//抓取距離
                         AllMessage +=  k+"."+(((JSONObject) jSteps.get(k)).get("html_instructions"))+"\n\n";
                         howlong = "\n"+instructions;
+                        //取得左右轉
                        if(jSteps.length()>1){
                             Turn =  (String) (((JSONObject) jSteps.get(1)).get("html_instructions"));
                         }else{
@@ -59,8 +60,6 @@ public class DirectionsParser {
                         }
                         howlong2 = "\n"+Turn;
                         List list = decodePolyline(polyline);
-                        //List list2 = decodePolyline(AllMessage);
-                        //String a = list2.get(0).toString();
                         //Loop for all points
                         for (int l = 0; l < list.size(); l++) {
                             HashMap<String, String> hm = new HashMap<String, String>();
@@ -89,6 +88,7 @@ public class DirectionsParser {
      * Method to decode polyline
      * Source : http://jeffreysambells.com/2010/05/27/decoding-polylines-from-google-maps-direction-api-with-java
      */
+    /**使用Java從Google Maps Direction API解碼折線*/
     private List decodePolyline(String encoded) {
 
         List poly = new ArrayList();
