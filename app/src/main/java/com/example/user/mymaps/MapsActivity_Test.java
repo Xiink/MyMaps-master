@@ -131,7 +131,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     //-------------BT------------
     private int REQUEST_ENABLE_BT = 1;
-    final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb"); /**        Standard SerialPortService ID*/
+    final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+    /**
+     * Standard SerialPortService ID
+     */
     BluetoothAdapter mBluetoothAdapter;
     public ArrayList<BluetoothDevice> mBTDevices = new ArrayList<>();
     BluetoothSocket mmSocket;
@@ -580,7 +583,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             send_text += km_text;
             send_turn += km_text;
 
-            if (mmSocket.isConnected()) {
+            if (mmSocket != null && mmSocket.isConnected()) {
                 try {
                     sendData(send_turn);
                 } catch (IOException e) {
@@ -780,11 +783,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
 
     /*---------------------------------------------BT------------------------------------------------*/
-    //順序 => 有無支援藍芽 => 有無開啟藍芽 => 先搜尋是否有相對應的藍芽裝置存在 => 如果存在判斷是否配對過 => 連線
+    /**
+     * 順序 => 有無支援藍芽 => 有無開啟藍芽 => 先搜尋是否有相對應的藍芽裝置存在 => 如果存在判斷是否配對過(當停止搜尋) => 連線
+     * */
+
+    private boolean Target = false; //如果找到的話
 
     //搜尋裝置
-    private void SearchDevice(){
-        if (mBluetoothAdapter.isEnabled()){
+    private void SearchDevice() {
+        if (mBluetoothAdapter.isEnabled()) {
             //沒連線過開啟搜尋功能去尋找配對
             if (mmDevice == null) {
                 if (mBluetoothAdapter.isDiscovering()) {
@@ -797,12 +804,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 if (!mBluetoothAdapter.isDiscovering()) {
 
                     mBluetoothAdapter.startDiscovery();
-                    IntentFilter discoverDevicesIntent = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+                    IntentFilter discoverDevicesIntent = new IntentFilter();
+                    discoverDevicesIntent.addAction(BluetoothDevice.ACTION_FOUND);
+                    discoverDevicesIntent.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
                     registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
                 }
             }
         }
     }
+    //廣播
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -813,15 +823,22 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 // Add the name and address to an array adapter to show in a ListView
                 if (device.getName().equals("ESP32test")) {
-                    Toast.makeText(getApplicationContext(),"FOUND",Toast.LENGTH_SHORT).show();
-                    mBluetoothAdapter.cancelDiscovery();
+                    Target = true;
                     Log.d(TAG, "onReceive: Device is founded");
                     if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
                         device.createBond();
                     }
-                    else {
-                        findBT();
-                    }
+                    mBluetoothAdapter.cancelDiscovery();
+                }
+            }
+            //結束搜尋
+            if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                if (Target) {
+                    Toast.makeText(getApplicationContext(), "找到設備", Toast.LENGTH_SHORT).show();
+                    Target = false;
+                    findBT();
+                } else {
+                    Toast.makeText(getApplicationContext(), "找不到設備", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -852,8 +869,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
             SearchDevice();
-        }
-        else if (mBluetoothAdapter.isEnabled()){
+        } else if (mBluetoothAdapter.isEnabled()) {
             SearchDevice();
         }
     }
@@ -905,9 +921,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 Log.d(TAG, "doInBackground: SocketClose!");
                 Log.e(TAG, "openBT: Can't connect to the device", e);
             }
-        } else {
-            Log.d(TAG, "openBT: Not already");
-            //findBT();
         }
     }
 
