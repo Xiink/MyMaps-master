@@ -203,7 +203,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         //接收使用者帳號
         Bundle bundle = this.getIntent().getExtras();
-        //Username = bundle.getString("name");
+        Username = bundle.getString("name");
         mQueue = Volley.newRequestQueue(getApplicationContext());
 
         init();
