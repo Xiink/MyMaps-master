@@ -113,16 +113,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
 
     private TextView textView,textViewAll;
-    private Button button, button2,button3;
+    private Button button, button2;
     private GoogleMap mMap;
     private Switch switch1;
-    int num = 0, num2 = 0, num3 = 0;
+    int num = 0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-    private boolean mPermissionDenied = false;
     MarkerOptions markerOptions1 = new MarkerOptions();
-    MarkerOptions markerOptions2 = new MarkerOptions();
     Handler handler = new Handler();
     Handler handler2 = new Handler();
+    Handler handler3 = new Handler();
 
 
     // location last updated time
@@ -195,11 +194,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         textViewAll = (TextView) findViewById(R.id.textViewAll);
         button = (Button) findViewById(R.id.button1);
         button2 = (Button) findViewById(R.id.buttontest);
-        button.setEnabled(false);
         textViewAll.setVisibility(View.INVISIBLE);
         switch1 = (Switch) findViewById(R.id.switch1);
         button.setVisibility(View.INVISIBLE);
         button2.setVisibility(View.INVISIBLE);
+        button.setEnabled(false);
+        button2.setEnabled(false);
 
         //接收使用者帳號
         Bundle bundle = this.getIntent().getExtras();
@@ -326,7 +326,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                         Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
                         btnopen = true;
-                        button.setEnabled(true);
+                        button2.setEnabled(true);
 
                     }
                 })
@@ -865,7 +865,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         }
     };
 
-
     //確認是否有無支援，並且確認有無開啟
     private void enableMyBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -926,12 +925,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     Log.d(TAG, "findBT: device"+device.getName());
                     if (device.getName().equals("ESP32test")) {
                         mmDevice = device;
-                        try {
-                            openBT();
-                            Toast.makeText(this, "已配對", Toast.LENGTH_LONG).show();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        new openBT().execute();
+                        Toast.makeText(this, "已配對", Toast.LENGTH_LONG).show();
                         break;
                     }
                 }
@@ -941,24 +936,53 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         }
     }
 
-
     //設備連線
-    void openBT() throws IOException {
-        if (mmDevice != null) {
-            try {
-                mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-                mmSocket.connect();
-                mmOutputStream = mmSocket.getOutputStream();
-                mmInputStream = mmSocket.getInputStream();
-                beginListenForData();
-            } catch (Exception e) {
-                Toast.makeText(getApplicationContext(), "設備尚未開啟", Toast.LENGTH_LONG).show();
-                mmSocket.close();
-                Log.e(TAG, "openBT: Can't connect to the device", e);
+    class openBT extends AsyncTask<Void,Void,Void>{
+        boolean BTOK=true;
+
+        @Override
+        protected void onPreExecute() {
+            if (mmDevice != null) {
+                try {
+                    mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+                    mmOutputStream = mmSocket.getOutputStream();
+                    mmInputStream = mmSocket.getInputStream();
+                } catch (Exception e) {
+                    Toast.makeText(getApplicationContext(), "設備尚未開啟", Toast.LENGTH_LONG).show();
+                    Log.e(TAG, "openBT: Can't connect to the device", e);
+                }
             }
         }
-    }
 
+        @Override
+        protected Void doInBackground(Void... voids) {
+            try {
+                mmSocket.connect();
+                beginListenForData();
+            } catch (IOException e) {
+                BTOK = false;
+                try {
+                    mmSocket.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... progress) {
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            if (!BTOK)
+                Toast.makeText(getApplicationContext(), "設備尚未開啟", Toast.LENGTH_LONG).show();
+            //跑完藍芽才去打開導航按鈕
+            button.setEnabled(true);
+        }
+    }
 
     //資料監聽器
     void beginListenForData() {
