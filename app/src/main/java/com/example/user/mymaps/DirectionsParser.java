@@ -44,12 +44,12 @@ public class DirectionsParser {
                         String polyline = "";
                         String howlong;
                         String howlong2;
-                        String text;
+                        int text;
                         String Turn;
                         polyline = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("polyline")).get("points");
 
                         instructions = (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));//抓取路線資訊
-                        text = (String) ((JSONObject) ((JSONObject) jSteps.get(0)).get("distance")).get("text");//抓取距離
+                        text = (int) ((JSONObject) ((JSONObject) jSteps.get(0)).get("distance")).get("value");//抓取距離
                         AllMessage +=  k+"."+(((JSONObject) jSteps.get(k)).get("html_instructions"))+"\n\n";
                         howlong = "\n"+instructions;
                         //取得左右轉
@@ -67,7 +67,7 @@ public class DirectionsParser {
                             hm.put("lon", Double.toString(((LatLng) list.get(l)).longitude));
                             hm.put("howlong",howlong);
                             hm.put("Turn",howlong2);
-                            hm.put("Km",text);
+                            hm.put("Km",Integer.toString(text));
                             hm.put("all",AllMessage);
                             path.add(hm);
                         }
