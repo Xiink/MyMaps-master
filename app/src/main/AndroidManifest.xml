@@ -41,7 +41,7 @@
             android:value="AIzaSyCpW5OKahG_HuU2qccxMW9kPIbDdRHrsnM" />
 
         <activity
-            android:name=".LoginActivity"
+            android:name=".MapsActivity_Test"
             android:label="@string/title_activity_maps__test">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -49,7 +49,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MapsActivity_Test" />
+        <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity"></activity>
     </application>
 

@@ -203,7 +203,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         //接收使用者帳號
         Bundle bundle = this.getIntent().getExtras();
-        Username = bundle.getString("name");
+        //Username = bundle.getString("name");
         mQueue = Volley.newRequestQueue(getApplicationContext());
 
         init();
@@ -402,6 +402,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     //點擊地圖
     @Override
     public void onMapClick(LatLng point) {
+        if(latLng1==null)
+            return;
         if(key!=true) {
             if (num == 0) {
                 //建立標記並加入地圖中
@@ -958,7 +960,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         protected Void doInBackground(Void... voids) {
             try {
                 mmSocket.connect();
-                beginListenForData();
+//                Looper.prepare();
+//                beginListenForData();
+//                Log.d(TAG, "doInBackground: LOOP");
+//                Looper.loop();
             } catch (IOException e) {
                 BTOK = false;
                 try {
@@ -977,6 +982,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         @Override
         protected void onPostExecute(Void result) {
+            Log.d(TAG, "onPostExecute: ");
             if (!BTOK)
                 Toast.makeText(getApplicationContext(), "設備尚未開啟", Toast.LENGTH_LONG).show();
             //跑完藍芽才去打開導航按鈕
