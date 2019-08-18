@@ -119,6 +119,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     int num = 0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     MarkerOptions markerOptions1 = new MarkerOptions();
+    MarkerOptions markerOptions2 = new MarkerOptions();
+    Marker mPerth;
     Handler handler = new Handler();
     Handler handler2 = new Handler();
     Handler handler3 = new Handler();
@@ -150,7 +152,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     private static final String TAG = MapsActivity_Test.class.getSimpleName();
     boolean key = false;
-
+    ArrayList<Polyline> pl = new ArrayList<Polyline>();
     //-------------BT------------
     private int REQUEST_ENABLE_BT = 1;
     final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
@@ -203,7 +205,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         //接收使用者帳號
         Bundle bundle = this.getIntent().getExtras();
-        //Username = bundle.getString("name");
+        Username = bundle.getString("name");
         mQueue = Volley.newRequestQueue(getApplicationContext());
 
         init();
@@ -545,15 +547,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     String Turn = point.get("Turn");
                     String Km = point.get("Km");
                     //正則
-                    howlong = howlong.replace("<b>", " ");
-                    howlong = howlong.replace("</b>", " ");
-                    howlong = howlong.replace("</div>", " ");
-                    howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    howlong = howlong.replace("<b>", " ");
-                    howlong = howlong.replace("</b>", " ");
-                    howlong = howlong.replace("</div>", " ");
-                    howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-
                     AllMessage = AllMessage.replace("<b>", " ");
                     AllMessage = AllMessage.replace("</b>", " ");
                     AllMessage = AllMessage.replace("</div>", " ");
@@ -659,11 +652,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     all_text = AllMessage;
                     points.add(new LatLng(lat, lon));
                 }
+               // for(int i=0;i<points.size()-1;i++){
+                    pl.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
+                //}
                 //繪製路線
-                polylineOptions.addAll(points);
+              /*  polylineOptions.addAll(points);
                 polylineOptions.width(15);
                 polylineOptions.color(Color.GREEN);
-                polylineOptions.geodesic(true);
+                polylineOptions.geodesic(true);*/
             }
             send_text+=km_text;
             send_turn+=km_text;
@@ -700,15 +696,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
      * Enables the My Location layer if the fine location permission has been granted.
      */
     private void enableMyLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // Permission to access the location is missing.
-            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
-                    Manifest.permission.ACCESS_FINE_LOCATION, true);
-        } else if (mMap != null) {
-            // Access to the location has been granted to the app.
-            mMap.setMyLocationEnabled(true);
-        }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Permission to access the location is missing.
+                PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                        Manifest.permission.ACCESS_FINE_LOCATION, true);
+            } else if (mMap != null) {
+                // Access to the location has been granted to the app.
+                mMap.setMyLocationEnabled(true);
+            }
     }
 
     @Override
@@ -724,7 +720,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private Runnable timerDirection = new Runnable() {
         @Override
         public void run() {
-            mMap.clear();
+            for(Polyline line : pl){
+                line.remove();
+            }
+            pl.clear();
+            //mMap.clear();
             latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
             markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
             markerOptions1.title("Destination!");
@@ -777,6 +777,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
 
     /*---------------------------------------------PHP------------------------------------------------*/
+    double s=0;
+    double ss=0;
     private void volley_JsonObjectRequestPOST(){
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, mUrl,null, new Response.Listener<JSONObject>() {
             @Override
@@ -788,9 +790,26 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         String id = jsondata.getString("id");
                         String name = jsondata.getString("name");
                         String score = jsondata.getString("score");
+                        try{
+                            s= Double.valueOf(name);
+                        }catch (Exception e){
+                            e.toString();
+                        }try{
+                            ss= Double.valueOf(score);
+                        }catch (Exception e){
+                            e.toString();
+                        }
+
                         /**只取出使用者以外的資料*/
-                        if(!(id.equals(Username)))
-                            textView.append(id + " " + name + " " + score + " " + "\n");
+                        if(!(id.equals(Username))) {
+                            //textView.append(s + "\n");
+                            //mPerth = mMap.addMarker(new MarkerOptions().position(new LatLng(s,ss)));
+                            markerOptions2.position(new LatLng(ss,s));
+                            markerOptions2.title("Destination!");
+                            markerOptions2.draggable(true);
+                            mMap.addMarker(markerOptions2);
+                            textView.setText(s+ss+"");
+                        }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -803,7 +822,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         });
         mQueue.add(getRequest);
     }
-
     /*---------------------------------------------PHP------------------------------------------------*/
 
     /*---------------------------------------------BT------------------------------------------------*/

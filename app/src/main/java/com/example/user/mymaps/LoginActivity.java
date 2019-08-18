@@ -72,7 +72,6 @@ public class LoginActivity extends AppCompatActivity {
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject jsondata = data.getJSONObject(i);
                         String id = jsondata.getString("id");
-                        String name = jsondata.getString("name");
                         String score = jsondata.getString("score");
                         /**進行帳號與密碼的比對*/
                         if(id.equals(Lname.getText().toString())&&score.equals(LPassowrd.getText().toString())){
@@ -84,7 +83,7 @@ public class LoginActivity extends AppCompatActivity {
                         Toast.makeText(getApplicationContext(), "登入成功!", Toast.LENGTH_LONG).show();
                         //成功便跳轉到主頁面
                         Intent registerIntent = new Intent(LoginActivity.this, MapsActivity_Test.class);
-                        //將使用者帳號傳送到地圖程式
+                        //將使用者帳號傳送到主頁面
                         registerIntent.putExtra("name", Lname.getText().toString());
                         LoginActivity.this.startActivity(registerIntent);
                     }else {
