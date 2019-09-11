@@ -1,6 +1,7 @@
 package com.example.user.mymaps;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -41,6 +42,10 @@ public class LoginActivity extends AppCompatActivity {
         Llogin = (Button) findViewById(R.id.Llogin);
         mQueue = Volley.newRequestQueue(getApplicationContext());
 
+        SharedPreferences setting =
+                getSharedPreferences("atm", MODE_PRIVATE);
+        Lname.setText(setting.getString("PREF_USERID", ""));
+
         LRegiserLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -80,6 +85,11 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     }
                     if(success){
+                        SharedPreferences setting =
+                                getSharedPreferences("atm", MODE_PRIVATE);
+                        setting.edit()
+                                .putString("PREF_USERID", Lname.getText().toString())
+                                .commit();
                         Toast.makeText(getApplicationContext(), "登入成功!", Toast.LENGTH_LONG).show();
                         //成功便跳轉到主頁面
                         Intent registerIntent = new Intent(LoginActivity.this, MapsActivity_Test.class);

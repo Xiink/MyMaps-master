@@ -652,14 +652,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     all_text = AllMessage;
                     points.add(new LatLng(lat, lon));
                 }
-               // for(int i=0;i<points.size()-1;i++){
                     pl.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
-                //}
                 //繪製路線
               /*  polylineOptions.addAll(points);
                 polylineOptions.width(15);
                 polylineOptions.color(Color.GREEN);
                 polylineOptions.geodesic(true);*/
+
             }
             send_text+=km_text;
             send_turn+=km_text;
@@ -701,10 +700,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 // Permission to access the location is missing.
                 PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
                         Manifest.permission.ACCESS_FINE_LOCATION, true);
+                enableMyLocation();
             } else if (mMap != null) {
                 // Access to the location has been granted to the app.
+                //
                 mMap.setMyLocationEnabled(true);
             }
+
     }
 
     @Override
@@ -724,7 +726,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 line.remove();
             }
             pl.clear();
-            //mMap.clear();
             latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
             markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
             markerOptions1.title("Destination!");
@@ -790,6 +791,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         String id = jsondata.getString("id");
                         String name = jsondata.getString("name");
                         String score = jsondata.getString("score");
+
+
                         try{
                             s= Double.valueOf(name);
                         }catch (Exception e){
