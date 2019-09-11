@@ -753,11 +753,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         super.onDestroy();
         unregisterReceiver(mBroadcastReceiver);
 
-        if (mBluetoothAdapter.isEnabled()) {
-            try {
-                closeBT();
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (mmSocket!=null) {
+            if (mmSocket.isConnected()) {
+                try {
+                    closeBT();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
