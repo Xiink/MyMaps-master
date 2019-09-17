@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/action_Start"
+            android:checked="true"
+
+            android:title="開始定位" />
+
+        <item
+            android:id="@+id/action_Direction"
+
+            android:title="開始導航" />
+
+        <item
+            android:id="@+id/action_information"
+
+            android:title="開啟路線資訊" />
+
+        <item
+            android:id="@+id/action_Chose"
+
+            android:title="選擇群組" />
+    </group>
+
+</menu>
