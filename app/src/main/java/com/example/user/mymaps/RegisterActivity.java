@@ -30,6 +30,7 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText Rname,RPassowrd;
     private Button RRegister;
     private TextView test;
+    private TextView LLoginLink;
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
     private final static String mUrl_S = "http://35.184.29.240:80/get.php";
     private RequestQueue mQueue,mmQueue;
@@ -43,7 +44,7 @@ public class RegisterActivity extends AppCompatActivity {
         Rname = (EditText) findViewById(R.id.RUsername);
         RPassowrd = (EditText) findViewById(R.id.RPasspword);
         RRegister = (Button) findViewById(R.id.RRegister);
-        test = (TextView) findViewById(R.id.test);
+        LLoginLink = (TextView) findViewById(R.id.LLoginLink);
         mQueue = Volley.newRequestQueue(getApplicationContext());
         mmQueue = Volley.newRequestQueue(getApplicationContext());
 
@@ -56,6 +57,15 @@ public class RegisterActivity extends AppCompatActivity {
                     volley_JsonObjectRequestPOST();
                 else
                     Toast.makeText(getApplicationContext(), "請輸入完整!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        LLoginLink.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //跳轉至註冊頁面
+                Intent registerIntent = new Intent(RegisterActivity.this, LoginActivity.class);
+                RegisterActivity.this.startActivity(registerIntent);
             }
         });
     }

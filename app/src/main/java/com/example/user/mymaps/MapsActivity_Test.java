@@ -13,28 +13,27 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
+import android.support.v7.widget.Toolbar;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
-import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,7 +46,6 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.common.internal.Objects;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -61,11 +59,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -84,13 +80,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.Console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -98,12 +92,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.UUID;
 
-import butterknife.BindView;
-import butterknife.OnClick;
+
 
 
 public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.OnMyLocationButtonClickListener,
@@ -152,6 +143,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     private static final String TAG = MapsActivity_Test.class.getSimpleName();
     boolean key = false;
+    boolean canDirection = false;
     ArrayList<Polyline> pl = new ArrayList<Polyline>();
     //-------------BT------------
     private int REQUEST_ENABLE_BT = 1;
@@ -182,6 +174,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     public String Username="";
     //-------------PHP-----------
 
+    private DrawerLayout drawerLayout;
+    private NavigationView navigation;
+    private Toolbar toolbar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,21 +190,81 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         textView = (TextView) findViewById(R.id.textView);
         textViewAll = (TextView) findViewById(R.id.textViewAll);
-        button = (Button) findViewById(R.id.button1);
-        button2 = (Button) findViewById(R.id.buttontest);
         textViewAll.setVisibility(View.INVISIBLE);
-        switch1 = (Switch) findViewById(R.id.switch1);
-        button.setVisibility(View.INVISIBLE);
-        button2.setVisibility(View.INVISIBLE);
-        button.setEnabled(false);
-        button2.setEnabled(false);
+        textViewAll.setMovementMethod(ScrollingMovementMethod.getInstance());
+        init();
+        /*---------------------------------------------Layout------------------------------------------------*/
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
+        navigation = (NavigationView) findViewById(R.id.navigation_view);
+        toolbar = (Toolbar) findViewById(R.id.toolbar4);
+        setSupportActionBar(toolbar);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        navigation.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                // 收起選單
+                drawerLayout.closeDrawer(GravityCompat.START);
+
+                // 取得選項
+                int number = item.getItemId();
+
+                // 依照id判斷點了哪個項目並做相應事件
+                if(number==R.id.action_Start){
+                    //findBT();
+                    volley_JsonObjectRequestPOST();
+                    if (btnopen) {
+                        handler2.removeCallbacks(moveMap);
+                        handler2.postDelayed(moveMap, 500);
+                    }
+                    return  true;
+                }
+
+                if(number==R.id.action_Direction){
+                    if(canDirection==false) {
+                        Toast.makeText(getApplicationContext(), "請先建立路線", Toast.LENGTH_LONG).show();
+                        return false;
+                    }
+                    if(key==false) {
+                        item.setTitle("暫停導航");
+                        handler.removeCallbacks(timerDirection);
+                        handler.postDelayed(timerDirection, 500);
+                        key = true;
+                    }else if(key==true){
+                        item.setTitle("開始導航");
+                        handler.removeCallbacksAndMessages(null);
+                        handler2.removeCallbacksAndMessages(null);
+                        mRequestingLocationUpdates = false;
+                        stopLocationUpdates();
+                        key = false;
+                    }
+                    return  true;
+                }
+
+                if(number==R.id.action_information){
+                    if (textViewAll.getVisibility() == View.VISIBLE) {
+                        item.setTitle("開啟路線資訊");
+                        textViewAll.setVisibility(View.INVISIBLE);
+                    }
+                    else {
+                        item.setTitle("關閉路線資訊");
+                        textViewAll.setVisibility(View.VISIBLE);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        /*---------------------------------------------Layout------------------------------------------------*/
 
         //接收使用者帳號
         Bundle bundle = this.getIntent().getExtras();
         Username = bundle.getString("name");
         mQueue = Volley.newRequestQueue(getApplicationContext());
-
-        init();
         mRequestingLocationUpdates = true;
 
         /**請求取得位置權限*/
@@ -235,50 +291,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         token.continuePermissionRequest();
                     }
                 }).check();
-
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(key==false) {
-                    button.setText("暫停導航");
-                    handler.removeCallbacks(timerDirection);
-                    handler.postDelayed(timerDirection, 500);
-                    key = true;
-                }else if(key==true){
-                    button.setText("開始導航");
-                    handler.removeCallbacksAndMessages(null);
-                    handler2.removeCallbacksAndMessages(null);
-                    mRequestingLocationUpdates = false;
-                    stopLocationUpdates();
-                    key = false;
-                }
-            }
-        });
-
-        button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                findBT();
-                volley_JsonObjectRequestPOST();
-                if (btnopen) {
-                    handler2.removeCallbacks(moveMap);
-                    handler2.postDelayed(moveMap, 500);
-                }
-            }
-        });
-
-        switch1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(switch1.isChecked()){
-                    button.setVisibility(View.VISIBLE);
-                    button2.setVisibility(View.VISIBLE);
-                }else{
-                    button.setVisibility(View.INVISIBLE);
-                    button2.setVisibility(View.INVISIBLE);
-                }
-            }
-        });
 
     }
     /**位置設定*/
@@ -307,7 +319,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         builder.addLocationRequest(mLocationRequest);
         mLocationSettingsRequest = builder.build();
 
-        enableMyBluetooth();
+        //enableMyBluetooth();
     }
 
     /**開始Location更新*/
@@ -328,8 +340,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                         Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
                         btnopen = true;
-                        button2.setEnabled(true);
-
                     }
                 })
                 .addOnFailureListener(this, new OnFailureListener() {
@@ -404,6 +414,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     //點擊地圖
     @Override
     public void onMapClick(LatLng point) {
+        canDirection = true;
         if(latLng1==null)
             return;
         if(key!=true) {
@@ -428,6 +439,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 num = 0;
                 mMap.clear();
                 textView.setText("");
+                canDirection=false;
             }
         }else{
             Toast.makeText(getApplicationContext(), "請先暫停導航在選擇目的地", Toast.LENGTH_SHORT).show();
@@ -555,6 +567,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     AllMessage = AllMessage.replace("</b>", " ");
                     AllMessage = AllMessage.replace("</div>", " ");
                     AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                    AllMessage = AllMessage.replace("/<wbr/>", " ");
 
                     Turn = Turn.replace("<b>", " ");
                     Turn = Turn.replace("</b>", " ");
@@ -564,6 +577,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     Turn = Turn.replace("</b>", " ");
                     Turn = Turn.replace("</div>", " ");
                     Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                    Turn = Turn.replace("/<wbr/>", " ");
 
                     switch (howlong.charAt(1)) {
                         case 'H':
@@ -660,19 +674,39 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 polylineOptions.geodesic(true);*/
 
             }
+            switch (send_turn){
+                case "TR":
+                    send_turn = "右轉走";
+                    break;
+                case "TL":
+                    send_turn = "左轉走";
+                    break;
+                case "HN":
+                    send_turn = "朝北走";
+                    break;
+                case "HS":
+                    send_turn = "朝南走";
+                    break;
+                case "HW":
+                    send_turn = "朝西走";
+                    break;
+                case "HH":
+                    send_turn = "朝東走";
+                    break;
+            }
             send_text+=km_text;
             send_turn+=km_text;
 
-            if (mmSocket.isConnected()){
+           /* if (mmSocket.isConnected()){
                 try {
                     sendData(send_turn);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
+            }*/
 
             Log.e(TAG, "onPostExecute: SEND_DATA: " + send_turn);
-            textView.setText(send_turn);
+            textView.setText(send_turn+"公尺");
             textViewAll.setText(all_text);
             if (polylineOptions != null) {
                 mMap.addPolyline(polylineOptions);
@@ -711,10 +745,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     @Override
     public boolean onMyLocationButtonClick() {
-        if (textViewAll.getVisibility() == View.VISIBLE)
-            textViewAll.setVisibility(View.INVISIBLE);
-        else
-            textViewAll.setVisibility(View.VISIBLE);
         return false;
     }
 
@@ -778,7 +808,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
 
-
     /*---------------------------------------------PHP------------------------------------------------*/
     double s=0;
     double ss=0;
@@ -813,7 +842,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             markerOptions2.title("Destination!");
                             markerOptions2.draggable(true);
                             mMap.addMarker(markerOptions2);
-                            textView.setText(s+ss+"");
                         }
                     }
                 } catch (JSONException e) {
@@ -828,6 +856,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         mQueue.add(getRequest);
     }
     /*---------------------------------------------PHP------------------------------------------------*/
+
+
+    /*---------------------------------------------Layout------------------------------------------------*/
+
+
+
+
+
+
+    /*---------------------------------------------Layout------------------------------------------------*/
 
     /*---------------------------------------------BT------------------------------------------------*/
     /**
@@ -1009,7 +1047,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             if (!BTOK)
                 Toast.makeText(getApplicationContext(), "設備尚未開啟", Toast.LENGTH_LONG).show();
             //跑完藍芽才去打開導航按鈕
-            button.setEnabled(true);
+            canDirection = true;
         }
     }
 

@@ -4,4 +4,6 @@
     <string name="tap_instructions1">tap_instructions</string>
     <string name="move_the_camera2">move_the_camera</string>
     <string name="button1">Button</string>
+    <string name="drawer_open">Drawer opened</string>
+    <string name="drawer_close">Drawer closed</string>
 </resources>

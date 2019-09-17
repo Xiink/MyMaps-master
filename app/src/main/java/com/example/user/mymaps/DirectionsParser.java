@@ -50,7 +50,7 @@ public class DirectionsParser {
 
                         instructions = (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));//抓取路線資訊
                         text = (int) ((JSONObject) ((JSONObject) jSteps.get(0)).get("distance")).get("value");//抓取距離
-                        AllMessage +=  k+"."+(((JSONObject) jSteps.get(k)).get("html_instructions"))+"\n\n";
+                        AllMessage +=  k+"."+(((JSONObject) jSteps.get(k)).get("html_instructions"))+"\n"+"-------------------------------------"+"\n";
                         howlong = "\n"+instructions;
                         //取得左右轉
                        if(jSteps.length()>1){
