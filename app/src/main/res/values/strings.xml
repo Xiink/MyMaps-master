@@ -6,4 +6,5 @@
     <string name="button1">Button</string>
     <string name="drawer_open">Drawer opened</string>
     <string name="drawer_close">Drawer closed</string>
+    <string name="title_activity_group">GroupActivity</string>
 </resources>

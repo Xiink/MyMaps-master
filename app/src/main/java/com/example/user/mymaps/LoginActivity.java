@@ -92,8 +92,8 @@ public class LoginActivity extends AppCompatActivity {
                                 .commit();
                         Toast.makeText(getApplicationContext(), "登入成功!", Toast.LENGTH_LONG).show();
                         //成功便跳轉到主頁面
-                        Intent registerIntent = new Intent(LoginActivity.this, MapsActivity_Test.class);
-                        //將使用者帳號傳送到主頁面
+                        Intent registerIntent = new Intent(LoginActivity.this, GroupActivity.class);
+                        //將使用者帳號傳送到頁面
                         registerIntent.putExtra("name", Lname.getText().toString());
                         LoginActivity.this.startActivity(registerIntent);
                     }else {

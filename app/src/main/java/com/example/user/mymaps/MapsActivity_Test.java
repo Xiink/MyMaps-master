@@ -31,6 +31,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -193,6 +194,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         textViewAll.setVisibility(View.INVISIBLE);
         textViewAll.setMovementMethod(ScrollingMovementMethod.getInstance());
         init();
+
+        //接收使用者帳號
+        Bundle bundle = this.getIntent().getExtras();
+        Username = bundle.getString("name");
+        mQueue = Volley.newRequestQueue(getApplicationContext());
+        mRequestingLocationUpdates = true;
+
         /*---------------------------------------------Layout------------------------------------------------*/
         drawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         navigation = (NavigationView) findViewById(R.id.navigation_view);
@@ -255,17 +263,23 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     }
                     return true;
                 }
+
+                if(number==R.id.action_Chose){
+                    Intent registerIntent = new Intent(MapsActivity_Test.this, GroupActivity.class);
+                    registerIntent.putExtra("name", Username);
+                    MapsActivity_Test.this.startActivity(registerIntent);
+                    return true;
+                }
+
                 return false;
             }
         });
 
-        /*---------------------------------------------Layout------------------------------------------------*/
+        View header = navigation.getHeaderView(0);
+        TextView headertext = (TextView) header.findViewById(R.id.headertext);
+        headertext.setText(Username);
 
-        //接收使用者帳號
-        Bundle bundle = this.getIntent().getExtras();
-        Username = bundle.getString("name");
-        mQueue = Volley.newRequestQueue(getApplicationContext());
-        mRequestingLocationUpdates = true;
+        /*---------------------------------------------Layout------------------------------------------------*/
 
         /**請求取得位置權限*/
         Dexter.withActivity(this)
@@ -293,6 +307,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 }).check();
 
     }
+
+
     /**位置設定*/
     private void init() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -392,6 +408,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            return true;
+        }
+        return false;
+    }
 
     //當google地圖準備好自動執行
     @Override
@@ -781,7 +805,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     protected void onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy();
-        unregisterReceiver(mBroadcastReceiver);
+//        unregisterReceiver(mBroadcastReceiver);
 
         if (mmSocket!=null) {
             if (mmSocket.isConnected()) {
