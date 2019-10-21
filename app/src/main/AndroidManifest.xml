@@ -14,6 +14,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
+
     <!--
       <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED"
           tools:ignore="ProtectedPermissions" />
@@ -50,9 +51,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".MapsActivity_Test" />
         <activity android:name=".RegisterActivity" />
-        <activity android:name=".GroupActivity"></activity>
+
+        <activity
+            android:name=".GroupActivity" />
+
     </application>
+
 
 </manifest>

@@ -80,7 +80,7 @@
     <!-- 選單 -->
     <android.support.design.widget.NavigationView
         android:id="@+id/navigation_view"
-        android:layout_width="240dp"
+        android:layout_width="210dp"
         android:layout_gravity="start"
         android:layout_height="match_parent"
         app:menu="@menu/drawer"

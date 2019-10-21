@@ -39,15 +39,23 @@
             android:background="?attr/colorPrimary"
             android:minHeight="?attr/actionBarSize"
             android:theme="?attr/actionBarTheme"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0"
             app:subtitle="群組"
             app:subtitleTextColor="#FFFFFFFF"
             app:title="導航程式"
-            app:titleTextColor="#FFFFFFFF"/>
-    </android.support.constraint.ConstraintLayout>
+            app:titleTextColor="#FFFFFFFF"
+            />
 
 
 </android.support.constraint.ConstraintLayout>
+
+
+</android.support.constraint.ConstraintLayout>
+
+
