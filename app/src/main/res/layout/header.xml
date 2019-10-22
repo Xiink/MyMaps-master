@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:paddingTop="4dp"
-        android:text="使用者名稱"
+        android:text="尚未登入"
         android:textColor="#ffffff" />
 
 </LinearLayout>

@@ -227,7 +227,17 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 switch (number) {
                     //menu BT連線
                     case R.id.action_BTconnect:
-
+                        if (!BT_IsConnected())
+                            SearchDevice();
+                        else {
+                            try {
+                                closeBT();
+                                Toast.makeText(getApplicationContext(),"已與設備段線",Toast.LENGTH_LONG).show();
+                                item.setTitle("藍芽連線");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         break;
                     //menu Map定位
                     case R.id.action_Start:
@@ -284,72 +294,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         startActivityForResult(intent_chose, REQ_FROM_A); //REQ_FROM_A(識別碼)
                         break;
                 }
-/*
-                if (number == R.id.action_Start) {
-                    //findBT();
-                    volley_JsonObjectRequestPOST();
-                    if (btnopen) {
-                        handler2.removeCallbacks(moveMap);
-                        handler2.postDelayed(moveMap, 500);
-                    }
-                    return true;
-                }
-
-                if (number == R.id.action_Direction) {
-                    if (canDirection == false) {
-                        Toast.makeText(getApplicationContext(), "請先建立路線", Toast.LENGTH_LONG).show();
-                        return false;
-                    }
-                    if (key == false) {
-                        item.setTitle("暫停導航");
-                        handler.removeCallbacks(timerDirection);
-                        handler.postDelayed(timerDirection, 500);
-                        key = true;
-                    } else if (key == true) {
-                        item.setTitle("開始導航");
-                        handler.removeCallbacksAndMessages(null);
-                        handler2.removeCallbacksAndMessages(null);
-                        mRequestingLocationUpdates = false;
-                        stopLocationUpdates();
-                        key = false;
-                    }
-                    return true;
-                }
-
-                if (number == R.id.action_information) {
-                    if (textViewAll.getVisibility() == View.VISIBLE) {
-                        item.setTitle("開啟路線資訊");
-                        textViewAll.setVisibility(View.INVISIBLE);
-                    } else {
-                        item.setTitle("關閉路線資訊");
-                        textViewAll.setVisibility(View.VISIBLE);
-                    }
-                    return true;
-                }
-
-                //開啟登入Activity
-                if (number == R.id.action_login) {
-                    Intent intent = new Intent(MapsActivity_Test.this, LoginActivity.class);
-                    startActivityForResult(intent, REQ_FROM_A); //REQ_FROM_A(識別碼)
-                    return true;
-                }
-
-                //開啟群組Activity
-                if (number == R.id.action_Chose) {
-                    if (!openGroupbtn) {
-                        Toast.makeText(getApplicationContext(), "請先進行登入!", Toast.LENGTH_LONG).show();
-                        return false;
-                    }
-                    Intent intent = new Intent(MapsActivity_Test.this, GroupActivity.class);
-                    intent.putExtra("name", result);
-                    startActivityForResult(intent, REQ_FROM_A); //REQ_FROM_A(識別碼)
-                    return true;
-                }
-*/
                 return false;
             }
         });
 
+        //---------選單
         /*---------------------------------------------Layout------------------------------------------------*/
 
         /**請求取得位置權限*/
@@ -800,15 +749,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             send_text += km_text;
             send_turn += km_text;
 
-           /* if (mmSocket.isConnected()){
+            if (BT_IsConnected()) {
                 try {
                     sendData(send_turn);
+                    Log.e(TAG, "onPostExecute: SEND_DATA: " + send_turn);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }*/
+            }
 
-            Log.e(TAG, "onPostExecute: SEND_DATA: " + send_turn);
+
             textView.setText(send_turn + "公尺");
             textViewAll.setText(all_text);
             if (polylineOptions != null) {
@@ -838,7 +788,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
                     Manifest.permission.ACCESS_FINE_LOCATION, true);
             enableMyLocation();
-        }else if (mMap != null) {
+        } else if (mMap != null) {
             // Access to the location has been granted to the app.
             //
             mMap.setMyLocationEnabled(true);
@@ -895,7 +845,44 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 }
             }
         }
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        //當收到藍芽有開
+        if (requestCode == REQUEST_ENABLE_BT) {
+            if (resultCode == RESULT_OK) {
+                Log.d(TAG, "onActivityResult: Result_OK");
+                Toast.makeText(getApplicationContext(), "藍芽已開啟", Toast.LENGTH_SHORT).show();
+            } else if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(getApplicationContext(), "為了連接設備請開啟藍芽", Toast.LENGTH_LONG).show();
+            }
+        }
+
+
+        /**接收使用者資料*/
+        if (resultCode == RESULT_B) //確認是否從登入頁面回傳
+        {
+            if (requestCode == REQ_FROM_A) //確認所要執行的動作
+            {
+                result = data.getExtras().getString("name"); //接收使用者名稱
+                openGroupbtn = data.getExtras().getBoolean("openbtn"); //開啟群組按鈕
+
+                View header = navigation.getHeaderView(0);
+                TextView headertext = (TextView) header.findViewById(R.id.headertext);
+                headertext.setText(result);
+            }
+        }
+
+        if (resultCode == RESULT_C) //確認是否從群組回傳
+        {
+            /**開啟群組功能*/
+            if (requestCode == REQ_FROM_A) //確認所要執行的動作
+            {
+                openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
+            }
+        }
     }
 
     @Override
@@ -979,64 +966,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
      * 順序 => 有無支援藍芽 => 有無開啟藍芽 => 先搜尋是否有相對應的藍芽裝置存在 => 如果存在判斷是否配對過(當停止搜尋) => 連線
      */
 
-
-    //搜尋裝置
-    private void SearchDevice() {
-        if (mBluetoothAdapter.isEnabled()) {
-            //沒連線過開啟搜尋功能去尋找配對
-            if (mBluetoothAdapter.isDiscovering()) {
-                Log.d(TAG, "Canceling discovery.");
-                mBluetoothAdapter.startDiscovery();
-                IntentFilter discoverDevicesIntent = new IntentFilter();
-                discoverDevicesIntent.addAction(mmDevice.ACTION_FOUND);
-                discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-                discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_STARTED);
-                registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
-                mBluetoothAdapter.cancelDiscovery();
-            }
-            if (!mBluetoothAdapter.isDiscovering()) {
-                Log.d(TAG, "SearchDevice: ");
-                IntentFilter discoverDevicesIntent = new IntentFilter();
-                discoverDevicesIntent.addAction(mmDevice.ACTION_FOUND);
-                discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-                discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_STARTED);
-                registerReceiver(mBroadcastReceiver, discoverDevicesIntent);        //送給廣播狀態設定
-                mBluetoothAdapter.startDiscovery();
-            }
-        }
-    }
-
-    //廣播
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            // When discovery finds a device
-            Log.d(TAG, "onReceive: " + action);
-            //當搜尋結束
-            if (mBluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-            }
-            //當設備找到
-            if (mmDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
-                BluetoothDevice device = intent.getParcelableExtra(mmDevice.EXTRA_DEVICE);
-                // Add the name and address to an array adapter to show in a ListView
-                //找到設備名叫ESP32test的裝置
-                if (device.getName().equals("ESP32test")) {
-                    if (device.getBondState() != mmDevice.BOND_BONDED) {
-                        device.createBond();
-                        Log.d(TAG, "onReceive: Bound");
-                    }
-                    mBluetoothAdapter.cancelDiscovery();
-                    Log.d(TAG, "onReceive: Device is founded");
-                }
-            }
-
-
-        }
-    };
-
-    //確認是否有無支援，並且確認有無開啟
+    //確認是否有無支援，並且確認有無開啟(1)
     private void enableMyBluetooth() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
@@ -1059,88 +989,106 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         else if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
-        } else {
-            //Toast.makeText(getApplicationContext(), "配對中...", Toast.LENGTH_SHORT).show();
-            //SearchDevice();
-        }
-
-    }
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ENABLE_BT) {
-            if (resultCode == RESULT_OK) {
-                Log.d(TAG, "onActivityResult: Result_OK");
-                Toast.makeText(getApplicationContext(), "配對中...", Toast.LENGTH_SHORT).show();
-                SearchDevice();
-            }
-        }
-
-        /**接收使用者資料*/
-        if (resultCode == RESULT_B) //確認是否從登入頁面回傳
-        {
-            if (requestCode == REQ_FROM_A) //確認所要執行的動作
-            {
-                result = data.getExtras().getString("name"); //接收使用者名稱
-                openGroupbtn = data.getExtras().getBoolean("openbtn"); //開啟群組按鈕
-
-                View header = navigation.getHeaderView(0);
-                TextView headertext = (TextView) header.findViewById(R.id.headertext);
-                headertext.setText(result);
-            }
-        }
-
-        if (resultCode == RESULT_C) //確認是否從群組回傳
-        {
-            /**開啟群組功能*/
-            if (requestCode == REQ_FROM_A) //確認所要執行的動作
-            {
-                openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
-            }
         }
     }
 
-    //從已配對過的設備中搜尋裝置
-    void findBT() {
-        /**
-         * 有開啟藍芽，且有搜尋到指定設備則連接
-         */
-        //藍芽關閉狀態
+    //搜尋裝置(2)
+    private void SearchDevice() {
         if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);     //發送請求
+            Toast.makeText(getApplicationContext(), "請開藍芽，謝謝", Toast.LENGTH_LONG).show();
+        } else {
+            //沒連線過開啟搜尋功能去尋找配對
+            if (mBluetoothAdapter.isDiscovering()) {
+                Log.d(TAG, "Canceling discovery.");
+                mBluetoothAdapter.startDiscovery();
+                IntentFilter discoverDevicesIntent = new IntentFilter();
+                discoverDevicesIntent.addAction(mmDevice.ACTION_FOUND);
+                discoverDevicesIntent.addAction(mmDevice.ACTION_BOND_STATE_CHANGED);
+                discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+                discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_STARTED);
+                registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
+                mBluetoothAdapter.cancelDiscovery();
+            }
+            if (!mBluetoothAdapter.isDiscovering()) {
+                Log.d(TAG, "SearchDevice: ");
+                IntentFilter discoverDevicesIntent = new IntentFilter();
+                discoverDevicesIntent.addAction(mmDevice.ACTION_FOUND);
+                discoverDevicesIntent.addAction(mmDevice.ACTION_BOND_STATE_CHANGED);
+                discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+                discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_STARTED);
+                registerReceiver(mBroadcastReceiver, discoverDevicesIntent);        //送給廣播狀態設定
+                mBluetoothAdapter.startDiscovery();
+            }
         }
-        //藍芽開啟狀態
-        if (mBluetoothAdapter.isEnabled()) {
-            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();  //查看已配對的設備中有沒有 ESP32test 的設備存在
-            if (pairedDevices.size() > 0) {
-                Log.d(TAG, "findBT: FINDING");
-                for (BluetoothDevice device : pairedDevices) {
-                    Log.d(TAG, "findBT: device" + device.getName());
-                    if (device.getName().equals("ESP32test")) {
+    }
+
+    //廣播(3)
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        private boolean _IS_FOUND_DEVICE = false;
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            // When discovery finds a device
+            Log.d(TAG, "onReceive: " + action);
+            //當搜尋結束
+            if (mBluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                //有找到
+                if (_IS_FOUND_DEVICE) {
+                    Toast.makeText(getApplicationContext(), "Found Device", Toast.LENGTH_LONG);
+                    Log.d(TAG, "onReceive: Device is founded");
+                }
+                //沒找到
+                else {
+                    Toast.makeText(getApplicationContext(), "Not Found Device", Toast.LENGTH_LONG);
+                    Log.d(TAG, "onReceive: Device is not found");
+                }
+            }
+            //當設備找到
+            if (mmDevice.ACTION_FOUND.equals(action)) {
+                // Get the BluetoothDevice object from the Intent
+                BluetoothDevice device = intent.getParcelableExtra(mmDevice.EXTRA_DEVICE);
+                // Add the name and address to an array adapter to show in a ListView
+                //找到設備名叫ESP32test的裝置
+                if (device.getName().equals("ESP32test")) {
+                    _IS_FOUND_DEVICE = true;
+                    //沒做過配對時去進行配對
+                    if (device.getBondState() != mmDevice.BOND_BONDED) {
+                        device.createBond();
+                        Toast.makeText(getApplicationContext(),"配對完請重新連線",Toast.LENGTH_LONG).show();
+                        //device.createBond();
+                        Log.d(TAG, "onReceive: Bound");
+                    }
+                    //有配對過，準備連線
+                    else if (device.getBondState() == mmDevice.BOND_BONDED) {
+                        Log.d(TAG, "onReceive: ReadyTOConnect");
                         mmDevice = device;
                         new openBT().execute();
-                        Toast.makeText(this, "已配對", Toast.LENGTH_LONG).show();
-                        break;
+                        Toast.makeText(getApplicationContext(), "找到設備並以連接", Toast.LENGTH_LONG).show();
+                        if (mmDevice == null)
+                            Toast.makeText(getApplicationContext(), "配對失敗", Toast.LENGTH_SHORT).show();
                     }
+                    //已找到須關閉藍芽尋找功能，因為尋找是很耗資源的動作
+                    mBluetoothAdapter.cancelDiscovery();
                 }
-                if (mmDevice == null)
-                    Toast.makeText(getApplicationContext(), "配對失敗", Toast.LENGTH_SHORT).show();
+            }
+            if (mmDevice.ACTION_BOND_STATE_CHANGED.equals(action)){
+                //Toast.makeText(getApplicationContext(),"已配對，請重新連線",Toast.LENGTH_LONG).show();
             }
         }
-    }
+    };
 
-    //設備連線
+
+    //設備連線(4)
     class openBT extends AsyncTask<Void, Void, Void> {
         boolean BTOK = true;
 
+        //Task預先動作
         @Override
         protected void onPreExecute() {
             if (mmDevice != null) {
                 try {
-                    mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+                    mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);        //SerialSocket
                     mmOutputStream = mmSocket.getOutputStream();
                     mmInputStream = mmSocket.getInputStream();
                 } catch (Exception e) {
@@ -1150,14 +1098,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             }
         }
 
+        //Task背景執行
         @Override
         protected Void doInBackground(Void... voids) {
             try {
                 mmSocket.connect();
-//                Looper.prepare();
-//                beginListenForData();
-//                Log.d(TAG, "doInBackground: LOOP");
-//                Looper.loop();
             } catch (IOException e) {
                 BTOK = false;
                 try {
@@ -1181,10 +1126,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 Toast.makeText(getApplicationContext(), "設備尚未開啟", Toast.LENGTH_LONG).show();
             //跑完藍芽才去打開導航按鈕
             canDirection = true;
+            //連線完成才開始接收資料
+            beginListenForData();
+            navigation.getMenu().findItem(R.id.action_BTconnect).setTitle("藍芽斷線");
         }
     }
 
-    //資料監聽器
+    //資料監聽----背景線呈
     void beginListenForData() {
         final Handler handler = new Handler();
         final byte delimiter = 10; //This is the ASCII code for a newline character
@@ -1242,6 +1190,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         mmOutputStream.close();
         mmInputStream.close();
         mmSocket.close();
+    }
+
+    //socket是否存在或是連線
+    private boolean BT_IsConnected() {
+        if (mmSocket == null || !mmSocket.isConnected())
+            return false;
+        else
+            return true;
     }
 
     /*---------------------------------------------BT------------------------------------------------*/
