@@ -27,6 +27,7 @@ public class GroupActivity extends AppCompatActivity {
     public String Username="";  //使用者名稱
     private LinearLayout Group;
     String name="";  //群組名稱
+    private static final int RESULT_C = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +37,11 @@ public class GroupActivity extends AppCompatActivity {
 
         for(int i=0;i<=20;i++)
             AddView(i);
-        Bundle bundle = this.getIntent().getExtras();
-        Username = bundle.getString("name");
+        // Bundle bundle = this.getIntent().getExtras();
+        //Username = bundle.getString("name");
+        Intent intent = this.getIntent();
+        Username = intent.getStringExtra("name");
+        Toast.makeText(getApplicationContext(), Username, Toast.LENGTH_LONG).show();
         initToolBar();
     }
 
@@ -134,9 +138,15 @@ public class GroupActivity extends AppCompatActivity {
                                     //跳轉
                                     EditText editText = (EditText) (Password_view.findViewById(R.id.password));
                                     if (editText.getText().toString().equals("9999")) {
-                                        Intent registerIntent = new Intent(GroupActivity.this, MapsActivity_Test.class);
-                                        registerIntent.putExtra("name", Username);
-                                        GroupActivity.this.startActivity(registerIntent);
+                                        //Intent registerIntent = new Intent(GroupActivity.this, MapsActivity_Test.class);
+                                        //registerIntent.putExtra("name", Username);
+                                        //GroupActivity.this.startActivity(registerIntent);
+                                        Intent intent = getIntent();
+                                        Bundle bundle = new Bundle();
+                                        bundle.putBoolean("openGroup",true);
+                                        intent.putExtras(bundle);
+                                        GroupActivity.this.setResult(RESULT_C, intent);
+                                        GroupActivity.this.finish();
                                     } else {
                                         Toast.makeText(getApplicationContext(), "密碼錯誤!", Toast.LENGTH_LONG).show();
                                     }

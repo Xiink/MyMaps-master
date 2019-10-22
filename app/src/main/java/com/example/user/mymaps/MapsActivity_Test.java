@@ -96,15 +96,13 @@ import java.util.Set;
 import java.util.UUID;
 
 
-
-
 public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMyLocationClickListener,
         OnMapReadyCallback, GoogleMap.OnMapClickListener, GoogleMap.OnMapLongClickListener, GoogleMap.OnCameraIdleListener,
         ActivityCompat.OnRequestPermissionsResultCallback {
 
 
-    private TextView textView,textViewAll;
+    private TextView textView, textViewAll;
     private Button button, button2;
     private GoogleMap mMap;
     private Switch switch1;
@@ -172,13 +170,18 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     //-------------PHP-----------
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
     private RequestQueue mQueue;
-    public String Username="";
+    public String Username = "";
+    public String result = "";
     //-------------PHP-----------
 
     private DrawerLayout drawerLayout;
     private NavigationView navigation;
     private Toolbar toolbar;
-
+    private static final int REQ_FROM_A = 1;
+    private static final int RESULT_B = 1;      //確認是否由登入頁面回傳
+    private static final int RESULT_C = 2;      //確認是否由群組頁面回傳
+    private static boolean openGroupbtn = false;  //開啟選擇群組按鈕
+    private static boolean openGroup = false;    //開啟群組功能
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,7 +200,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         //接收使用者帳號
         Bundle bundle = this.getIntent().getExtras();
-        Username = bundle.getString("name");
+        //Username = bundle.getString("name");
         mQueue = Volley.newRequestQueue(getApplicationContext());
         mRequestingLocationUpdates = true;
 
@@ -221,27 +224,27 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 int number = item.getItemId();
 
                 // 依照id判斷點了哪個項目並做相應事件
-                if(number==R.id.action_Start){
+                if (number == R.id.action_Start) {
                     //findBT();
                     volley_JsonObjectRequestPOST();
                     if (btnopen) {
                         handler2.removeCallbacks(moveMap);
                         handler2.postDelayed(moveMap, 500);
                     }
-                    return  true;
+                    return true;
                 }
 
-                if(number==R.id.action_Direction){
-                    if(canDirection==false) {
+                if (number == R.id.action_Direction) {
+                    if (canDirection == false) {
                         Toast.makeText(getApplicationContext(), "請先建立路線", Toast.LENGTH_LONG).show();
                         return false;
                     }
-                    if(key==false) {
+                    if (key == false) {
                         item.setTitle("暫停導航");
                         handler.removeCallbacks(timerDirection);
                         handler.postDelayed(timerDirection, 500);
                         key = true;
-                    }else if(key==true){
+                    } else if (key == true) {
                         item.setTitle("開始導航");
                         handler.removeCallbacksAndMessages(null);
                         handler2.removeCallbacksAndMessages(null);
@@ -249,35 +252,42 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         stopLocationUpdates();
                         key = false;
                     }
-                    return  true;
+                    return true;
                 }
 
-                if(number==R.id.action_information){
+                if (number == R.id.action_information) {
                     if (textViewAll.getVisibility() == View.VISIBLE) {
                         item.setTitle("開啟路線資訊");
                         textViewAll.setVisibility(View.INVISIBLE);
-                    }
-                    else {
+                    } else {
                         item.setTitle("關閉路線資訊");
                         textViewAll.setVisibility(View.VISIBLE);
                     }
                     return true;
                 }
 
-                if(number==R.id.action_Chose){
-                    Intent registerIntent = new Intent(MapsActivity_Test.this, GroupActivity.class);
-                    registerIntent.putExtra("name", Username);
-                    MapsActivity_Test.this.startActivity(registerIntent);
+                //開啟登入Activity
+                if (number == R.id.action_login) {
+                    Intent intent = new Intent(MapsActivity_Test.this, LoginActivity.class);
+                    startActivityForResult(intent, REQ_FROM_A); //REQ_FROM_A(識別碼)
+                    return true;
+                }
+
+                //開啟群組Activity
+                if (number == R.id.action_Chose) {
+                    if (!openGroupbtn) {
+                        Toast.makeText(getApplicationContext(), "請先進行登入!", Toast.LENGTH_LONG).show();
+                        return false;
+                    }
+                    Intent intent = new Intent(MapsActivity_Test.this, GroupActivity.class);
+                    intent.putExtra("name", result);
+                    startActivityForResult(intent, REQ_FROM_A); //REQ_FROM_A(識別碼)
                     return true;
                 }
 
                 return false;
             }
         });
-
-        View header = navigation.getHeaderView(0);
-        TextView headertext = (TextView) header.findViewById(R.id.headertext);
-        headertext.setText(Username);
 
         /*---------------------------------------------Layout------------------------------------------------*/
 
@@ -309,7 +319,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
 
-    /**位置設定*/
+    /**
+     * 位置設定
+     */
     private void init() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mSettingsClient = LocationServices.getSettingsClient(this);
@@ -338,7 +350,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         //enableMyBluetooth();
     }
 
-    /**開始Location更新*/
+    /**
+     * 開始Location更新
+     */
     private void startLocationUpdates() {
         mSettingsClient
                 .checkLocationSettings(mLocationSettingsRequest)
@@ -385,7 +399,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     }
                 });
     }
-    /**停止Location的更新*/
+
+    /**
+     * 停止Location的更新
+     */
     public void stopLocationUpdates() {
         // Removing location updates
         mFusedLocationClient
@@ -439,9 +456,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     @Override
     public void onMapClick(LatLng point) {
         canDirection = true;
-        if(latLng1==null)
+        if (latLng1 == null)
             return;
-        if(key!=true) {
+        if (key != true) {
             if (num == 0) {
                 //建立標記並加入地圖中
                 markerOptions1.position(new LatLng(point.latitude, point.longitude));
@@ -463,9 +480,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 num = 0;
                 mMap.clear();
                 textView.setText("");
-                canDirection=false;
+                canDirection = false;
             }
-        }else{
+        } else {
             Toast.makeText(getApplicationContext(), "請先暫停導航在選擇目的地", Toast.LENGTH_SHORT).show();
         }
     }
@@ -679,8 +696,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                     break;
                             }
                             break;
-                        case  'M':
-                            switch (Turn.charAt(9)){
+                        case 'M':
+                            switch (Turn.charAt(9)) {
                                 case 'U':
                                     send_turn = "TU";
                             }
@@ -690,7 +707,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     all_text = AllMessage;
                     points.add(new LatLng(lat, lon));
                 }
-                    pl.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
+                pl.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
                 //繪製路線
               /*  polylineOptions.addAll(points);
                 polylineOptions.width(15);
@@ -698,7 +715,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 polylineOptions.geodesic(true);*/
 
             }
-            switch (send_turn){
+            switch (send_turn) {
                 case "TR":
                     send_turn = "右轉走";
                     break;
@@ -718,8 +735,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     send_turn = "朝東走";
                     break;
             }
-            send_text+=km_text;
-            send_turn+=km_text;
+            send_text += km_text;
+            send_turn += km_text;
 
            /* if (mmSocket.isConnected()){
                 try {
@@ -730,7 +747,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             }*/
 
             Log.e(TAG, "onPostExecute: SEND_DATA: " + send_turn);
-            textView.setText(send_turn+"公尺");
+            textView.setText(send_turn + "公尺");
             textViewAll.setText(all_text);
             if (polylineOptions != null) {
                 mMap.addPolyline(polylineOptions);
@@ -753,17 +770,17 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
      * Enables the My Location layer if the fine location permission has been granted.
      */
     private void enableMyLocation() {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                    != PackageManager.PERMISSION_GRANTED) {
-                // Permission to access the location is missing.
-                PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
-                        Manifest.permission.ACCESS_FINE_LOCATION, true);
-                enableMyLocation();
-            } else if (mMap != null) {
-                // Access to the location has been granted to the app.
-                //
-                mMap.setMyLocationEnabled(true);
-            }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission to access the location is missing.
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+            enableMyLocation();
+        } else if (mMap != null) {
+            // Access to the location has been granted to the app.
+            //
+            mMap.setMyLocationEnabled(true);
+        }
 
     }
 
@@ -776,11 +793,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private Runnable timerDirection = new Runnable() {
         @Override
         public void run() {
-            for(Polyline line : pl){
+            for (Polyline line : pl) {
                 line.remove();
             }
             pl.clear();
-            latLng1 = new LatLng(mCurrentLocation.getLatitude(),mCurrentLocation.getLongitude());
+            latLng1 = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
             markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
             markerOptions1.title("Destination!");
             markerOptions1.draggable(true);
@@ -807,7 +824,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         super.onDestroy();
 //        unregisterReceiver(mBroadcastReceiver);
 
-        if (mmSocket!=null) {
+        if (mmSocket != null) {
             if (mmSocket.isConnected()) {
                 try {
                     closeBT();
@@ -823,6 +840,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     public void onMyLocationClick(@NonNull Location location) {
         Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG).show();
     }
+
     /**
      * Displays a dialog with error message explaining that the location permission is missing.
      */
@@ -833,39 +851,43 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
 
     /*---------------------------------------------PHP------------------------------------------------*/
-    double s=0;
-    double ss=0;
-    private void volley_JsonObjectRequestPOST(){
-        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, mUrl,null, new Response.Listener<JSONObject>() {
+    double s = 0;
+    double ss = 0;
+
+    private void volley_JsonObjectRequestPOST() {
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, mUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
                     JSONArray data = response.getJSONArray("data");
-                    for (int i = 0; i < data.length(); i++) {
-                        JSONObject jsondata = data.getJSONObject(i);
-                        String id = jsondata.getString("id");
-                        String name = jsondata.getString("name");
-                        String score = jsondata.getString("score");
+                    if (openGroup) {
+                        for (int i = 0; i < data.length(); i++) {
+                            JSONObject jsondata = data.getJSONObject(i);
+                            String id = jsondata.getString("id");
+                            String name = jsondata.getString("name");
+                            String score = jsondata.getString("score");
 
 
-                        try{
-                            s= Double.valueOf(name);
-                        }catch (Exception e){
-                            e.toString();
-                        }try{
-                            ss= Double.valueOf(score);
-                        }catch (Exception e){
-                            e.toString();
-                        }
+                            try {
+                                s = Double.valueOf(name);
+                            } catch (Exception e) {
+                                e.toString();
+                            }
+                            try {
+                                ss = Double.valueOf(score);
+                            } catch (Exception e) {
+                                e.toString();
+                            }
 
-                        /**只取出使用者以外的資料*/
-                        if(!(id.equals(Username))) {
-                            //textView.append(s + "\n");
-                            //mPerth = mMap.addMarker(new MarkerOptions().position(new LatLng(s,ss)));
-                            markerOptions2.position(new LatLng(ss,s));
-                            markerOptions2.title("Destination!");
-                            markerOptions2.draggable(true);
-                            mMap.addMarker(markerOptions2);
+                            /**只取出使用者以外的資料*/
+                            if (!(id.equals(result))) {
+                                //textView.append(s + "\n");
+                                //mPerth = mMap.addMarker(new MarkerOptions().position(new LatLng(s,ss)));
+                                markerOptions2.position(new LatLng(ss, s));
+                                markerOptions2.title("Destination!");
+                                markerOptions2.draggable(true);
+                                mMap.addMarker(markerOptions2);
+                            }
                         }
                     }
                 } catch (JSONException e) {
@@ -892,11 +914,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     /*---------------------------------------------Layout------------------------------------------------*/
 
     /*---------------------------------------------BT------------------------------------------------*/
+
     /**
      * 順序 => 有無支援藍芽 => 有無開啟藍芽 => 先搜尋是否有相對應的藍芽裝置存在 => 如果存在判斷是否配對過(當停止搜尋) => 連線
      */
 
-    private boolean Target = false; //如果找到的話
 
     //搜尋裝置
     private void SearchDevice() {
@@ -918,7 +940,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 discoverDevicesIntent.addAction(mmDevice.ACTION_FOUND);
                 discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_FINISHED);
                 discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_STARTED);
-                registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
+                registerReceiver(mBroadcastReceiver, discoverDevicesIntent);        //送給廣播狀態設定
                 mBluetoothAdapter.startDiscovery();
             }
         }
@@ -931,9 +953,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             final String action = intent.getAction();
             // When discovery finds a device
             Log.d(TAG, "onReceive: " + action);
-            //結束搜尋
+            //搜尋結束
             if (mBluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
             }
+            //設備找到
             if (mmDevice.ACTION_FOUND.equals(action)) {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(mmDevice.EXTRA_DEVICE);
@@ -981,6 +1004,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         }
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -989,6 +1013,29 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 Log.d(TAG, "onActivityResult: Result_OK");
                 Toast.makeText(getApplicationContext(), "配對中...", Toast.LENGTH_SHORT).show();
                 SearchDevice();
+            }
+        }
+
+        /**接收使用者資料*/
+        if (resultCode == RESULT_B) //確認是否從登入頁面回傳
+        {
+            if (requestCode == REQ_FROM_A) //確認所要執行的動作
+            {
+                result = data.getExtras().getString("name"); //接收使用者名稱
+                openGroupbtn = data.getExtras().getBoolean("openbtn"); //開啟群組按鈕
+
+                View header = navigation.getHeaderView(0);
+                TextView headertext = (TextView) header.findViewById(R.id.headertext);
+                headertext.setText(result);
+            }
+        }
+
+        if (resultCode == RESULT_C) //確認是否從群組回傳
+        {
+            /**開啟群組功能*/
+            if (requestCode == REQ_FROM_A) //確認所要執行的動作
+            {
+                openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
             }
         }
     }
@@ -1009,7 +1056,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             if (pairedDevices.size() > 0) {
                 Log.d(TAG, "findBT: FINDING");
                 for (BluetoothDevice device : pairedDevices) {
-                    Log.d(TAG, "findBT: device"+device.getName());
+                    Log.d(TAG, "findBT: device" + device.getName());
                     if (device.getName().equals("ESP32test")) {
                         mmDevice = device;
                         new openBT().execute();
@@ -1017,15 +1064,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         break;
                     }
                 }
-                if (mmDevice ==null)
-                    Toast.makeText(getApplicationContext(),"配對失敗",Toast.LENGTH_SHORT).show();
+                if (mmDevice == null)
+                    Toast.makeText(getApplicationContext(), "配對失敗", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
     //設備連線
-    class openBT extends AsyncTask<Void,Void,Void>{
-        boolean BTOK=true;
+    class openBT extends AsyncTask<Void, Void, Void> {
+        boolean BTOK = true;
 
         @Override
         protected void onPreExecute() {

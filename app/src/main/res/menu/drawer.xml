@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/action_BTconnect"
+            android:title="藍芽連線" />
+        <item
             android:id="@+id/action_Start"
-            android:checked="true"
 
             android:title="開始定位" />
 
@@ -17,6 +20,11 @@
             android:id="@+id/action_information"
 
             android:title="開啟路線資訊" />
+
+        <item
+            android:id="@+id/action_login"
+
+            android:title="使用者登入" />
 
         <item
             android:id="@+id/action_Chose"

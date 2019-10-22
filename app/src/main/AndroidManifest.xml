@@ -20,6 +20,7 @@
           tools:ignore="ProtectedPermissions" />
       <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
           <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+          AIzaSyCpW5OKahG_HuU2qccxMW9kPIbDdRHrsnM
     -->
     <application
         android:allowBackup="true"
@@ -40,10 +41,10 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCpW5OKahG_HuU2qccxMW9kPIbDdRHrsnM" />
+            android:value="AIzaSyAKNmClJUzbE68PiTcNLEjAo4TxesF4zS4" />
 
         <activity
-            android:name=".LoginActivity"
+            android:name=".MapsActivity_Test"
             android:label="@string/title_activity_maps__test">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -52,7 +53,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".MapsActivity_Test" />
+        <activity android:name=".LoginActivity" />
         <activity android:name=".RegisterActivity" />
 
         <activity

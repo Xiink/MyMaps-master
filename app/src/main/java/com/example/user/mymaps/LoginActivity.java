@@ -30,6 +30,7 @@ public class LoginActivity extends AppCompatActivity {
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
     private RequestQueue mQueue;
     boolean success = false;
+    private static final int RESULT_B = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,10 +93,19 @@ public class LoginActivity extends AppCompatActivity {
                                 .commit();
                         Toast.makeText(getApplicationContext(), "登入成功!", Toast.LENGTH_LONG).show();
                         //成功便跳轉到主頁面
-                        Intent registerIntent = new Intent(LoginActivity.this, GroupActivity.class);
+                        //Intent registerIntent = new Intent(LoginActivity.this, MapsActivity_Test.class);
                         //將使用者帳號傳送到頁面
-                        registerIntent.putExtra("name", Lname.getText().toString());
-                        LoginActivity.this.startActivity(registerIntent);
+                        //registerIntent.putExtra("name", Lname.getText().toString());
+                        //LoginActivity.this.startActivity(registerIntent);
+
+                        Intent intent = getIntent();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("name",Lname.getText().toString());
+                        bundle.putBoolean("openbtn",true);
+                        intent.putExtras(bundle);
+                        LoginActivity.this.setResult(RESULT_B, intent);
+                        LoginActivity.this.finish();
+
                     }else {
                         Toast.makeText(getApplicationContext(), "帳號或密碼錯誤!", Toast.LENGTH_LONG).show();
                     }
