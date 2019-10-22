@@ -214,16 +214,77 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
+
+        //--------------------選單
         navigation.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 // 收起選單
                 drawerLayout.closeDrawer(GravityCompat.START);
-
                 // 取得選項
                 int number = item.getItemId();
-
                 // 依照id判斷點了哪個項目並做相應事件
+                switch (number) {
+                    //menu BT連線
+                    case R.id.action_BTconnect:
+
+                        break;
+                    //menu Map定位
+                    case R.id.action_Start:
+                        //findBT();
+                        volley_JsonObjectRequestPOST();
+                        if (btnopen) {
+                            handler2.removeCallbacks(moveMap);
+                            handler2.postDelayed(moveMap, 500);
+                        }
+                        break;
+                    //menu 開始導航
+                    case R.id.action_Direction:
+                        if (canDirection == false) {
+                            Toast.makeText(getApplicationContext(), "請先建立路線", Toast.LENGTH_LONG).show();
+                            return false;
+                        }
+                        if (key == false) {
+                            item.setTitle("暫停導航");
+                            handler.removeCallbacks(timerDirection);
+                            handler.postDelayed(timerDirection, 500);
+                            key = true;
+                        } else if (key == true) {
+                            item.setTitle("開始導航");
+                            handler.removeCallbacksAndMessages(null);
+                            handler2.removeCallbacksAndMessages(null);
+                            mRequestingLocationUpdates = false;
+                            stopLocationUpdates();
+                            key = false;
+                        }
+                        break;
+                    //menu 導航資訊
+                    case R.id.action_information:
+                        if (textViewAll.getVisibility() == View.VISIBLE) {
+                            item.setTitle("開啟路線資訊");
+                            textViewAll.setVisibility(View.INVISIBLE);
+                        } else {
+                            item.setTitle("關閉路線資訊");
+                            textViewAll.setVisibility(View.VISIBLE);
+                        }
+                        break;
+                    //menu 登入
+                    case R.id.action_login:
+                        Intent intent_login = new Intent(MapsActivity_Test.this, LoginActivity.class);
+                        startActivityForResult(intent_login, REQ_FROM_A); //REQ_FROM_A(識別碼)
+                        break;
+                    //menu 選擇群組
+                    case R.id.action_Chose:
+                        if (!openGroupbtn) {
+                            Toast.makeText(getApplicationContext(), "請先進行登入!", Toast.LENGTH_LONG).show();
+                            return false;
+                        }
+                        Intent intent_chose = new Intent(MapsActivity_Test.this, GroupActivity.class);
+                        intent_chose.putExtra("name", result);
+                        startActivityForResult(intent_chose, REQ_FROM_A); //REQ_FROM_A(識別碼)
+                        break;
+                }
+/*
                 if (number == R.id.action_Start) {
                     //findBT();
                     volley_JsonObjectRequestPOST();
@@ -284,7 +345,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     startActivityForResult(intent, REQ_FROM_A); //REQ_FROM_A(識別碼)
                     return true;
                 }
-
+*/
                 return false;
             }
         });
@@ -295,6 +356,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         Dexter.withActivity(this)
                 .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
                 .withListener(new PermissionListener() {
+                    //當找位置權限認可時
                     @Override
                     public void onPermissionGranted(PermissionGrantedResponse response) {
                         mRequestingLocationUpdates = true;
@@ -347,7 +409,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         builder.addLocationRequest(mLocationRequest);
         mLocationSettingsRequest = builder.build();
 
-        //enableMyBluetooth();
+        enableMyBluetooth();
     }
 
     /**
@@ -776,7 +838,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
                     Manifest.permission.ACCESS_FINE_LOCATION, true);
             enableMyLocation();
-        } else if (mMap != null) {
+        }else if (mMap != null) {
             // Access to the location has been granted to the app.
             //
             mMap.setMyLocationEnabled(true);
@@ -850,7 +912,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
 
-    /*---------------------------------------------PHP------------------------------------------------*/
+    /*---------------------------------------------HttpPOST------------------------------------------------*/
     double s = 0;
     double ss = 0;
 
@@ -866,8 +928,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             String id = jsondata.getString("id");
                             String name = jsondata.getString("name");
                             String score = jsondata.getString("score");
-
-
                             try {
                                 s = Double.valueOf(name);
                             } catch (Exception e) {
@@ -901,7 +961,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         });
         mQueue.add(getRequest);
     }
-    /*---------------------------------------------PHP------------------------------------------------*/
+    /*---------------------------------------------HttpPOST------------------------------------------------*/
 
 
     /*---------------------------------------------Layout------------------------------------------------*/
@@ -953,14 +1013,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             final String action = intent.getAction();
             // When discovery finds a device
             Log.d(TAG, "onReceive: " + action);
-            //搜尋結束
+            //當搜尋結束
             if (mBluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
             }
-            //設備找到
+            //當設備找到
             if (mmDevice.ACTION_FOUND.equals(action)) {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(mmDevice.EXTRA_DEVICE);
                 // Add the name and address to an array adapter to show in a ListView
+                //找到設備名叫ESP32test的裝置
                 if (device.getName().equals("ESP32test")) {
                     if (device.getBondState() != mmDevice.BOND_BONDED) {
                         device.createBond();
@@ -999,9 +1060,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
         } else {
-            Toast.makeText(getApplicationContext(), "配對中...", Toast.LENGTH_SHORT).show();
-            SearchDevice();
+            //Toast.makeText(getApplicationContext(), "配對中...", Toast.LENGTH_SHORT).show();
+            //SearchDevice();
         }
+
     }
 
 

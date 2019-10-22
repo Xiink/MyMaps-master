@@ -150,7 +150,7 @@ public abstract class PermissionUtils {
          * @param finishActivity Whether the calling Activity should be finished if the dialog is
          *                       cancelled.
          *
-         *建立一個對話框的新實例，解釋顯示使用位置權限的基本原理
+         *建立一個對話框的新實例，解釋顯示使用位置權限的原因
          */
         public static RationaleDialog newInstance(int requestCode, boolean finishActivity) {
             Bundle arguments = new Bundle();
