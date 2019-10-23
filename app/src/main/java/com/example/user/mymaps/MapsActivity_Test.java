@@ -232,7 +232,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         else {
                             try {
                                 closeBT();
-                                Toast.makeText(getApplicationContext(),"已與設備段線",Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(), "已與設備段線", Toast.LENGTH_LONG).show();
                                 item.setTitle("藍芽連線");
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -300,33 +300,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         //---------選單
         /*---------------------------------------------Layout------------------------------------------------*/
-
-        /**請求取得位置權限*/
-        Dexter.withActivity(this)
-                .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                .withListener(new PermissionListener() {
-                    //當找位置權限認可時
-                    @Override
-                    public void onPermissionGranted(PermissionGrantedResponse response) {
-                        mRequestingLocationUpdates = true;
-                        /**成功開始呼叫位置更新函式*/
-                        startLocationUpdates();
-                    }
-
-                    @Override
-                    public void onPermissionDenied(PermissionDeniedResponse response) {
-                        if (response.isPermanentlyDenied()) {
-                            // open device settings when the permission is
-                            // denied permanently
-                        }
-                    }
-
-                    @Override
-                    public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
-                        token.continuePermissionRequest();
-                    }
-                }).check();
-
     }
 
 
@@ -784,16 +757,48 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private void enableMyLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            // Permission to access the location is missing.
-            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
-                    Manifest.permission.ACCESS_FINE_LOCATION, true);
-            enableMyLocation();
-        } else if (mMap != null) {
-            // Access to the location has been granted to the app.
-            //
-            mMap.setMyLocationEnabled(true);
-        }
+            /**請求取得位置權限*/
+            Dexter.withActivity(this)
+                    .withPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                    .withListener(new PermissionListener() {
+                        //當找位置權限認可時
+                        @Override
+                        public void onPermissionGranted(PermissionGrantedResponse response) {
+                            mRequestingLocationUpdates = true;
+                            /**成功開始呼叫位置更新函式*/
+                            startLocationUpdates();
+                            if (mMap != null) {
+                                // Access to the location has been granted to the app.
+                                //
+                                if (ActivityCompat.checkSelfPermission(MapsActivity_Test.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity_Test.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                    // TODO: Consider calling
+                                    //    ActivityCompat#requestPermissions
+                                    // here to request the missing permissions, and then overriding
+                                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                    //                                          int[] grantResults)
+                                    // to handle the case where the user grants the permission. See the documentation
+                                    // for ActivityCompat#requestPermissions for more details.
+                                    return;
+                                }
+                                mMap.setMyLocationEnabled(true);
+                            }
+                        }
 
+                        @Override
+                        public void onPermissionDenied(PermissionDeniedResponse response) {
+                            if (response.isPermanentlyDenied()) {
+                                Toast.makeText(getApplicationContext(), "請允許位置權限", Toast.LENGTH_LONG).show();
+                                MapsActivity_Test.this.finish();
+                            }
+                        }
+
+                        @Override
+                        public void onPermissionRationaleShouldBeShown(PermissionRequest permission, PermissionToken token) {
+                            token.continuePermissionRequest();
+                        }
+                    }).check();
+
+        }
     }
 
     @Override
