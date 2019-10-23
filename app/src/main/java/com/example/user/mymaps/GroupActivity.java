@@ -27,7 +27,7 @@ public class GroupActivity extends AppCompatActivity {
     public String Username="";  //使用者名稱
     private LinearLayout Group;
     String name="";  //群組名稱
-    private static final int RESULT_C = 2;
+    private static final int RESULT_FROM_GROUP = 65300;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +41,7 @@ public class GroupActivity extends AppCompatActivity {
         //Username = bundle.getString("name");
         Intent intent = this.getIntent();
         Username = intent.getStringExtra("name");
-        Toast.makeText(getApplicationContext(), Username, Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "使用者"+Username, Toast.LENGTH_LONG).show();
         initToolBar();
     }
 
@@ -145,7 +145,7 @@ public class GroupActivity extends AppCompatActivity {
                                         Bundle bundle = new Bundle();
                                         bundle.putBoolean("openGroup",true);
                                         intent.putExtras(bundle);
-                                        GroupActivity.this.setResult(RESULT_C, intent);
+                                        GroupActivity.this.setResult(RESULT_FROM_GROUP, intent);
                                         GroupActivity.this.finish();
                                     } else {
                                         Toast.makeText(getApplicationContext(), "密碼錯誤!", Toast.LENGTH_LONG).show();

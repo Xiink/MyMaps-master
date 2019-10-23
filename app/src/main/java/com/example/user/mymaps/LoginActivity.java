@@ -30,7 +30,7 @@ public class LoginActivity extends AppCompatActivity {
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
     private RequestQueue mQueue;
     boolean success = false;
-    private static final int RESULT_B = 1;
+    private static final int RESULT_FROM_LOGIN = 65200;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         Llogin = (Button) findViewById(R.id.Llogin);
         mQueue = Volley.newRequestQueue(getApplicationContext());
 
+        //取得記憶過的帳號
         SharedPreferences setting =
                 getSharedPreferences("atm", MODE_PRIVATE);
         Lname.setText(setting.getString("PREF_USERID", ""));
@@ -101,9 +102,9 @@ public class LoginActivity extends AppCompatActivity {
                         Intent intent = getIntent();
                         Bundle bundle = new Bundle();
                         bundle.putString("name",Lname.getText().toString());
-                        bundle.putBoolean("openbtn",true);
+                        bundle.putBoolean("LogInSuccess",true);
                         intent.putExtras(bundle);
-                        LoginActivity.this.setResult(RESULT_B, intent);
+                        LoginActivity.this.setResult(RESULT_FROM_LOGIN, intent);
                         LoginActivity.this.finish();
 
                     }else {

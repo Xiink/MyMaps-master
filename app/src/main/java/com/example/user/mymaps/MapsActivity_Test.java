@@ -145,7 +145,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     boolean canDirection = false;
     ArrayList<Polyline> pl = new ArrayList<Polyline>();
     //-------------BT------------
-    private int REQUEST_ENABLE_BT = 1;
+    private static final int REQUEST_ENABLE_BT = 62512;
     final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     /**
      * Standard SerialPortService ID
@@ -177,10 +177,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private DrawerLayout drawerLayout;
     private NavigationView navigation;
     private Toolbar toolbar;
-    private static final int REQ_FROM_A = 1;
-    private static final int RESULT_B = 1;      //確認是否由登入頁面回傳
-    private static final int RESULT_C = 2;      //確認是否由群組頁面回傳
-    private static boolean openGroupbtn = false;  //開啟選擇群組按鈕
+    private static final int REQUEST_LOGIN = 65502;
+    private static final int REQUEST_GROUP = 65501;
+    private static final int RESULT_FROM_LOGIN = 65200;      //確認是否由登入頁面回傳
+    private static final int RESULT_FROM_GROUP = 65300;      //確認是否由群組頁面回傳
+    private static boolean LogInSuccess = false;  //開啟選擇群組按鈕
     private static boolean openGroup = false;    //開啟群組功能
 
     @Override
@@ -280,18 +281,26 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         break;
                     //menu 登入
                     case R.id.action_login:
-                        Intent intent_login = new Intent(MapsActivity_Test.this, LoginActivity.class);
-                        startActivityForResult(intent_login, REQ_FROM_A); //REQ_FROM_A(識別碼)
+                        if (!LogInSuccess) {
+                            Intent intent_login = new Intent(MapsActivity_Test.this, LoginActivity.class);
+                            startActivityForResult(intent_login, REQUEST_LOGIN); //REQ_FROM_A(識別碼)
+                        } else {
+                            TextView logout = navigation.getHeaderView(0).findViewById(R.id.headertext);
+                            logout.setText("尚未登入");
+                            LogInSuccess = false;
+                            item.setTitle("登入");
+                        }
+
                         break;
                     //menu 選擇群組
                     case R.id.action_Chose:
-                        if (!openGroupbtn) {
+                        if (!LogInSuccess) {
                             Toast.makeText(getApplicationContext(), "請先進行登入!", Toast.LENGTH_LONG).show();
                             return false;
                         }
                         Intent intent_chose = new Intent(MapsActivity_Test.this, GroupActivity.class);
                         intent_chose.putExtra("name", result);
-                        startActivityForResult(intent_chose, REQ_FROM_A); //REQ_FROM_A(識別碼)
+                        startActivityForResult(intent_chose, REQUEST_GROUP); //REQ_FROM_A(識別碼)
                         break;
                 }
                 return false;
@@ -352,7 +361,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
                                 mLocationCallback, Looper.myLooper());
 
-                        Toast.makeText(getApplicationContext(), "Success!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "定位完成!", Toast.LENGTH_SHORT).show();
                         btnopen = true;
                     }
                 })
@@ -779,8 +788,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                         @Override
                         public void onPermissionDenied(PermissionDeniedResponse response) {
-                                Toast.makeText(getApplicationContext(), "請允許位置權限", Toast.LENGTH_LONG).show();
-                                //MapsActivity_Test.this.finish();
+                            Toast.makeText(getApplicationContext(), "請允許位置權限", Toast.LENGTH_LONG).show();
+                            //MapsActivity_Test.this.finish();
                         }
 
                         @Override
@@ -789,7 +798,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         }
                     }).check();
 
-        }else if(mMap != null){
+        } else if (mMap != null) {
             startLocationUpdates();
             mMap.setMyLocationEnabled(true);
         }
@@ -862,23 +871,24 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
 
         /**接收使用者資料*/
-        if (resultCode == RESULT_B) //確認是否從登入頁面回傳
+        if (requestCode == REQUEST_LOGIN) //確認是否從登入頁面回傳
         {
-            if (requestCode == REQ_FROM_A) //確認所要執行的動作
+            if (resultCode == RESULT_FROM_LOGIN) //確認所要執行的動作
             {
                 result = data.getExtras().getString("name"); //接收使用者名稱
-                openGroupbtn = data.getExtras().getBoolean("openbtn"); //開啟群組按鈕
+                LogInSuccess = data.getExtras().getBoolean("LogInSuccess"); //開啟群組按鈕
 
                 View header = navigation.getHeaderView(0);
                 TextView headertext = (TextView) header.findViewById(R.id.headertext);
                 headertext.setText(result);
+                navigation.getMenu().findItem(R.id.action_login).setTitle("登出");
             }
         }
 
-        if (resultCode == RESULT_C) //確認是否從群組回傳
+        if (requestCode == REQUEST_LOGIN) //確認是否從群組回傳
         {
             /**開啟群組功能*/
-            if (requestCode == REQ_FROM_A) //確認所要執行的動作
+            if (resultCode == RESULT_FROM_GROUP) //確認所要執行的動作
             {
                 openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
             }
@@ -986,10 +996,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         /**
          *已經確認有藍芽設備且沒有開啟藍芽時，會發送請求開啟藍芽
          */
-        else if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableBluetooth = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBluetooth, REQUEST_ENABLE_BT);
-        }
+        else if (!mBluetoothAdapter.isEnabled())
+            startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT);
     }
 
     //搜尋裝置(2)
@@ -1046,23 +1054,23 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 }
             }
 
-            if (mBluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
+            if (mBluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 navigation.getMenu().findItem(R.id.action_BTconnect).setEnabled(false);
-                Toast.makeText(getApplicationContext(),"配對中...",Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "配對中...", Toast.LENGTH_LONG).show();
             }
             //當設備找到
             if (mmDevice.ACTION_FOUND.equals(action)) {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(mmDevice.EXTRA_DEVICE);
                 // Add the name and address to an array adapter to show in a ListView
-                Log.i(TAG, "onReceive: Device:"+device.getName()+" MAC:"+device.getAddress());
+                Log.i(TAG, "onReceive: Device:" + device.getName() + " MAC:" + device.getAddress());
                 //找到設備名叫ESP32test的裝置
-                if (device.getName()!=null && device.getName().equals("ESP32test")) {
+                if (device.getName() != null && device.getName().equals("ESP32test")) {
                     _IS_FOUND_DEVICE = true;
                     //沒做過配對時去進行配對
                     if (device.getBondState() != mmDevice.BOND_BONDED) {
                         device.createBond();
-                        Toast.makeText(getApplicationContext(),"配對完請重新連線",Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "配對完請重新連線", Toast.LENGTH_LONG).show();
                         //device.createBond();
                         Log.d(TAG, "onReceive: Bound");
                     }
@@ -1079,7 +1087,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     mBluetoothAdapter.cancelDiscovery();
                 }
             }
-            if (mmDevice.ACTION_BOND_STATE_CHANGED.equals(action)){
+            if (mmDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
                 //Toast.makeText(getApplicationContext(),"已配對，請重新連線",Toast.LENGTH_LONG).show();
             }
         }
