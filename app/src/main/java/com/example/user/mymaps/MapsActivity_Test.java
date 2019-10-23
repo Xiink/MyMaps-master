@@ -856,6 +856,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         }
     }
 
+    /**
+     * 確認Activity狀態
+     *
+     * @param requestCode Activity請求
+     * @param resultCode  Activity回傳狀態
+     * @param data  回傳資料(可為空值)
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
