@@ -232,7 +232,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         else {
                             try {
                                 closeBT();
-                                Toast.makeText(getApplicationContext(), "已與設備段線", Toast.LENGTH_LONG).show();
+                                Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
                                 item.setTitle("藍芽連線");
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -242,7 +242,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     //menu Map定位
                     case R.id.action_Start:
                         //findBT();
-                        volley_JsonObjectRequestPOST();
+                        startLocationUpdates();
                         if (btnopen) {
                             handler2.removeCallbacks(moveMap);
                             handler2.postDelayed(moveMap, 500);
@@ -766,12 +766,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         public void onPermissionGranted(PermissionGrantedResponse response) {
                             mRequestingLocationUpdates = true;
                             /**成功開始呼叫位置更新函式*/
-                            startLocationUpdates();
+                            //startLocationUpdates();
                             if (mMap != null) {
                                 // Access to the location has been granted to the app.
                                 //
                                 if (ActivityCompat.checkSelfPermission(MapsActivity_Test.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity_Test.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
                                     return;
                                 }
                                 mMap.setMyLocationEnabled(true);
@@ -790,6 +789,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         }
                     }).check();
 
+        }else if(mMap != null){
+            startLocationUpdates();
+            mMap.setMyLocationEnabled(true);
         }
     }
 
@@ -805,6 +807,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             for (Polyline line : pl) {
                 line.remove();
             }
+            volley_JsonObjectRequestPOST();
             pl.clear();
             latLng1 = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
             markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
@@ -1052,8 +1055,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(mmDevice.EXTRA_DEVICE);
                 // Add the name and address to an array adapter to show in a ListView
+                Log.i(TAG, "onReceive: Device:"+device.getName()+" MAC:"+device.getAddress());
                 //找到設備名叫ESP32test的裝置
-                if (device.getName().equals("ESP32test")) {
+                if (device.getName()!=null && device.getName().equals("ESP32test")) {
                     _IS_FOUND_DEVICE = true;
                     //沒做過配對時去進行配對
                     if (device.getBondState() != mmDevice.BOND_BONDED) {
