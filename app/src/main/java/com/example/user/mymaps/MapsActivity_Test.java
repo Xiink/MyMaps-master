@@ -771,13 +771,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                 // Access to the location has been granted to the app.
                                 //
                                 if (ActivityCompat.checkSelfPermission(MapsActivity_Test.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity_Test.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                                    // TODO: Consider calling
-                                    //    ActivityCompat#requestPermissions
-                                    // here to request the missing permissions, and then overriding
-                                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                                    //                                          int[] grantResults)
-                                    // to handle the case where the user grants the permission. See the documentation
-                                    // for ActivityCompat#requestPermissions for more details.
+
                                     return;
                                 }
                                 mMap.setMyLocationEnabled(true);
@@ -786,10 +780,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                         @Override
                         public void onPermissionDenied(PermissionDeniedResponse response) {
-                            if (response.isPermanentlyDenied()) {
                                 Toast.makeText(getApplicationContext(), "請允許位置權限", Toast.LENGTH_LONG).show();
-                                MapsActivity_Test.this.finish();
-                            }
+                                //MapsActivity_Test.this.finish();
                         }
 
                         @Override
@@ -1005,14 +997,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             //沒連線過開啟搜尋功能去尋找配對
             if (mBluetoothAdapter.isDiscovering()) {
                 Log.d(TAG, "Canceling discovery.");
-                mBluetoothAdapter.startDiscovery();
+                mBluetoothAdapter.cancelDiscovery();
                 IntentFilter discoverDevicesIntent = new IntentFilter();
                 discoverDevicesIntent.addAction(mmDevice.ACTION_FOUND);
                 discoverDevicesIntent.addAction(mmDevice.ACTION_BOND_STATE_CHANGED);
                 discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_FINISHED);
                 discoverDevicesIntent.addAction(mBluetoothAdapter.ACTION_DISCOVERY_STARTED);
                 registerReceiver(mBroadcastReceiver, discoverDevicesIntent);
-                mBluetoothAdapter.cancelDiscovery();
+                mBluetoothAdapter.startDiscovery();
             }
             if (!mBluetoothAdapter.isDiscovering()) {
                 Log.d(TAG, "SearchDevice: ");
@@ -1038,16 +1030,22 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             Log.d(TAG, "onReceive: " + action);
             //當搜尋結束
             if (mBluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                navigation.getMenu().findItem(R.id.action_BTconnect).setEnabled(true);
                 //有找到
                 if (_IS_FOUND_DEVICE) {
-                    Toast.makeText(getApplicationContext(), "Found Device", Toast.LENGTH_LONG);
+                    //Toast.makeText(getApplicationContext(), "Found Device", Toast.LENGTH_LONG).show();
                     Log.d(TAG, "onReceive: Device is founded");
                 }
                 //沒找到
                 else {
-                    Toast.makeText(getApplicationContext(), "Not Found Device", Toast.LENGTH_LONG);
+                    Toast.makeText(getApplicationContext(), "找不到對應設備", Toast.LENGTH_LONG).show();
                     Log.d(TAG, "onReceive: Device is not found");
                 }
+            }
+
+            if (mBluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
+                navigation.getMenu().findItem(R.id.action_BTconnect).setEnabled(false);
+                Toast.makeText(getApplicationContext(),"配對中...",Toast.LENGTH_LONG).show();
             }
             //當設備找到
             if (mmDevice.ACTION_FOUND.equals(action)) {
