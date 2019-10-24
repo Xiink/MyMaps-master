@@ -171,7 +171,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
     private RequestQueue mQueue;
     public String Username = "";
-    public String result = "";
+    public String result = "";  //使用者名稱
+    private JSONArray data;
     //-------------PHP-----------
 
     private DrawerLayout drawerLayout;
@@ -917,15 +918,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
 
     /*---------------------------------------------HttpPOST------------------------------------------------*/
-    double s = 0;
-    double ss = 0;
-
+    double longitude = 0;  //經度
+    double latitude = 0; //緯度
     private void volley_JsonObjectRequestPOST() {
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, mUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
-                    JSONArray data = response.getJSONArray("data");
+                    data = response.getJSONArray("data");
                     if (openGroup) {
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject jsondata = data.getJSONObject(i);
@@ -933,25 +933,18 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             String name = jsondata.getString("name");
                             String score = jsondata.getString("score");
                             try {
-                                s = Double.valueOf(name);
+                                longitude = Double.valueOf(score);
                             } catch (Exception e) {
                                 e.toString();
                             }
                             try {
-                                ss = Double.valueOf(score);
+                                latitude = Double.valueOf(name);
                             } catch (Exception e) {
                                 e.toString();
                             }
 
-                            /**只取出使用者以外的資料*/
-                            if (!(id.equals(result))) {
-                                //textView.append(s + "\n");
-                                //mPerth = mMap.addMarker(new MarkerOptions().position(new LatLng(s,ss)));
-                                markerOptions2.position(new LatLng(ss, s));
-                                markerOptions2.title("Destination!");
-                                markerOptions2.draggable(true);
-                                mMap.addMarker(markerOptions2);
-                            }
+                            /**只取出使用者以外的資料加入地圖中*/
+                            AddUser(id,longitude,latitude);
                         }
                     }
                 } catch (JSONException e) {
@@ -964,6 +957,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             }
         });
         mQueue.add(getRequest);
+    }
+
+    private void AddUser(String id,Double longitude,Double latitude){
+        if (!(id.equals(result))) {
+            markerOptions2.position(new LatLng(longitude, latitude));
+            markerOptions2.title("Destination!");
+            markerOptions2.draggable(true);
+            mMap.addMarker(markerOptions2);
+        }
     }
     /*---------------------------------------------HttpPOST------------------------------------------------*/
 

@@ -30,6 +30,7 @@ public class LoginActivity extends AppCompatActivity {
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
     private RequestQueue mQueue;
     boolean success = false;
+    private JSONArray data;
     private static final int RESULT_FROM_LOGIN = 65200;
 
     @Override
@@ -75,42 +76,15 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onResponse(JSONObject response) {
                 try {
-                    JSONArray data = response.getJSONArray("data");
+                    data = response.getJSONArray("data");
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject jsondata = data.getJSONObject(i);
                         String id = jsondata.getString("id");
                         String score = jsondata.getString("score");
                         /**進行帳號與密碼的比對*/
-                        if(id.equals(Lname.getText().toString())&&score.equals(LPassowrd.getText().toString())){
-                            success = true;
-                            break;
-                        }
+                        CheckUser(id,score);
                     }
-                    if(success){
-                        SharedPreferences setting =
-                                getSharedPreferences("atm", MODE_PRIVATE);
-                        setting.edit()
-                                .putString("PREF_USERID", Lname.getText().toString())
-                                .commit();
-                        Toast.makeText(getApplicationContext(), "登入成功!", Toast.LENGTH_LONG).show();
-                        //成功便跳轉到主頁面
-                        //Intent registerIntent = new Intent(LoginActivity.this, MapsActivity_Test.class);
-                        //將使用者帳號傳送到頁面
-                        //registerIntent.putExtra("name", Lname.getText().toString());
-                        //LoginActivity.this.startActivity(registerIntent);
-
-                        Intent intent = getIntent();
-                        Bundle bundle = new Bundle();
-                        bundle.putString("name",Lname.getText().toString());
-                        bundle.putBoolean("LogInSuccess",true);
-                        intent.putExtras(bundle);
-                        LoginActivity.this.setResult(RESULT_FROM_LOGIN, intent);
-                        LoginActivity.this.finish();
-
-                    }else {
-                        Toast.makeText(getApplicationContext(), "帳號或密碼錯誤!", Toast.LENGTH_LONG).show();
-                    }
-
+                    VolleyLogin();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -121,5 +95,32 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
         mQueue.add(getRequest);
+    }
+
+    private void CheckUser(String id,String score){
+        if(id.equals(Lname.getText().toString())&&score.equals(LPassowrd.getText().toString())){
+            success = true;
+        }
+    }
+
+    private void VolleyLogin(){
+        if(success){
+            SharedPreferences setting =
+                    getSharedPreferences("atm", MODE_PRIVATE);
+            setting.edit()
+                    .putString("PREF_USERID", Lname.getText().toString())
+                    .commit();
+            Toast.makeText(getApplicationContext(), "登入成功!", Toast.LENGTH_LONG).show();
+            Intent intent = getIntent();
+            Bundle bundle = new Bundle();
+            bundle.putString("name",Lname.getText().toString());
+            bundle.putBoolean("LogInSuccess",true);
+            intent.putExtras(bundle);
+            LoginActivity.this.setResult(RESULT_FROM_LOGIN, intent);
+            LoginActivity.this.finish();
+
+        }else {
+            Toast.makeText(getApplicationContext(), "帳號或密碼錯誤!", Toast.LENGTH_LONG).show();
+        }
     }
 }
