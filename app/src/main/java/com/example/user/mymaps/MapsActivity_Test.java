@@ -892,7 +892,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             }
         }
 
-        if (requestCode == REQUEST_LOGIN) //確認是否從群組回傳
+        if (requestCode == REQUEST_GROUP) //確認是否從群組回傳
         {
             /**開啟群組功能*/
             if (resultCode == RESULT_FROM_GROUP) //確認所要執行的動作
