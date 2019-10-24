@@ -301,7 +301,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         }
                         Intent intent_chose = new Intent(MapsActivity_Test.this, GroupActivity.class);
                         intent_chose.putExtra("name", result);
-                        startActivityForResult(intent_chose, REQUEST_GROUP); //REQ_FROM_A(識別碼)
+                        startActivityForResult(intent_chose, REQUEST_GROUP);
                         break;
                 }
                 return false;
@@ -883,7 +883,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         {
             if (resultCode == RESULT_FROM_LOGIN) //確認所要執行的動作
             {
-                result = data.getExtras().getString("name"); //接收使用者名稱
+                result = data.getExtras().getString("name"); //接收使用者名稱，為了給Group用
                 LogInSuccess = data.getExtras().getBoolean("LogInSuccess"); //開啟群組按鈕
 
                 View header = navigation.getHeaderView(0);

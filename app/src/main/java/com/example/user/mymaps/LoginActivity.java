@@ -79,10 +79,10 @@ public class LoginActivity extends AppCompatActivity {
                     data = response.getJSONArray("data");
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject jsondata = data.getJSONObject(i);
-                        String id = jsondata.getString("id");
-                        String score = jsondata.getString("score");
+                        String username = jsondata.getString("username");
+                        String password = jsondata.getString("password");
                         /**進行帳號與密碼的比對*/
-                        CheckUser(id,score);
+                        CheckUser(username,password);
                     }
                     VolleyLogin();
                 } catch (JSONException e) {
@@ -97,8 +97,8 @@ public class LoginActivity extends AppCompatActivity {
         mQueue.add(getRequest);
     }
 
-    private void CheckUser(String id,String score){
-        if(id.equals(Lname.getText().toString())&&score.equals(LPassowrd.getText().toString())){
+    private void CheckUser(String username,String password){
+        if(username.equals(Lname.getText().toString())&&password.equals(LPassowrd.getText().toString())){
             success = true;
         }
     }
