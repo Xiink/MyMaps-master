@@ -2,9 +2,12 @@ package com.example.user.mymaps;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -24,10 +27,11 @@ import org.json.JSONObject;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText Lname,LPassowrd;
+    private TextInputEditText TIET_Name, TIET_Pass;
+    private TextInputLayout TIL_Name, TIL_Pass;
     private Button Llogin;
     private TextView LRegiserLink;;
-    private final static String mUrl = "http://35.184.29.240:80/conn.php";
+    private final static String mUrl = "http://35.184.29.240:80/getusers.php";
     private RequestQueue mQueue;
     boolean success = false;
     private JSONArray data;
@@ -38,8 +42,11 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        Lname = (EditText) findViewById(R.id.LUsername);
-        LPassowrd = (EditText) findViewById(R.id.LPassowrd);
+        TIL_Name = (TextInputLayout)findViewById(R.id.TIL_login_Username);
+        TIET_Name = (TextInputEditText)findViewById(R.id.TIET_login_Username);
+        TIL_Pass = (TextInputLayout)findViewById(R.id.TIL_login_Password);
+        TIET_Pass = (TextInputEditText)findViewById(R.id.TIET_login_Password);
+
         LRegiserLink = (TextView) findViewById(R.id.LRegisterHere);
         Llogin = (Button) findViewById(R.id.Llogin);
         mQueue = Volley.newRequestQueue(getApplicationContext());
@@ -47,12 +54,12 @@ public class LoginActivity extends AppCompatActivity {
         //取得記憶過的帳號
         SharedPreferences setting =
                 getSharedPreferences("atm", MODE_PRIVATE);
-        Lname.setText(setting.getString("PREF_USERID", ""));
+        TIET_Name.setText(setting.getString("PREF_USERID", ""));
 
         LRegiserLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //跳轉至註冊頁面
+                //跳轉至註冊頁面 -- 註冊按鈕
                 Intent registerIntent = new Intent(LoginActivity.this, RegisterActivity.class);
                 LoginActivity.this.startActivity(registerIntent);
             }
@@ -61,12 +68,34 @@ public class LoginActivity extends AppCompatActivity {
         Llogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //確認輸入有無錯誤
-                if(!(TextUtils.isEmpty(Lname.getText().toString()))&&!(TextUtils.isEmpty(LPassowrd.getText().toString()))){
+                //確認輸入有無錯誤 -- 登入按鈕
+                TIET_Name.clearFocus();
+                TIET_Pass.clearFocus();
+                if(!(TextUtils.isEmpty(TIET_Name.getText().toString()))&&!(TextUtils.isEmpty(TIET_Pass.getText().toString()))){
                     volley_JsonObjectRequestPOST();
-                }else{
-                    Toast.makeText(getApplicationContext(), "請完整填寫帳號及密碼", Toast.LENGTH_LONG).show();
                 }
+                if (TextUtils.isEmpty(TIET_Name.getText().toString())){
+                    TIL_Name.setError("請輸入帳號");
+                }
+                if(TextUtils.isEmpty(TIET_Pass.getText().toString())){
+                    TIL_Pass.setError("請輸入密碼");
+                }
+            }
+        });
+        //點擊帳號欄事件
+        TIET_Name.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                TIL_Name.setErrorEnabled(false);
+                return false;
+            }
+        });
+        //點擊密碼欄事件
+        TIET_Pass.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                TIL_Pass.setErrorEnabled(false);
+                return false;
             }
         });
     }
@@ -98,7 +127,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void CheckUser(String username,String password){
-        if(username.equals(Lname.getText().toString())&&password.equals(LPassowrd.getText().toString())){
+        if(username.equals(TIET_Name.getText().toString())&&password.equals(TIET_Pass.getText().toString())){
             success = true;
         }
     }
@@ -108,19 +137,20 @@ public class LoginActivity extends AppCompatActivity {
             SharedPreferences setting =
                     getSharedPreferences("atm", MODE_PRIVATE);
             setting.edit()
-                    .putString("PREF_USERID", Lname.getText().toString())
+                    .putString("PREF_USERID", TIET_Name.getText().toString())
                     .commit();
             Toast.makeText(getApplicationContext(), "登入成功!", Toast.LENGTH_LONG).show();
             Intent intent = getIntent();
             Bundle bundle = new Bundle();
-            bundle.putString("name",Lname.getText().toString());
+            bundle.putString("name",TIET_Name.getText().toString());
             bundle.putBoolean("LogInSuccess",true);
             intent.putExtras(bundle);
             LoginActivity.this.setResult(RESULT_FROM_LOGIN, intent);
             LoginActivity.this.finish();
 
         }else {
-            Toast.makeText(getApplicationContext(), "帳號或密碼錯誤!", Toast.LENGTH_LONG).show();
+            TIL_Name.setError("帳號或密碼錯誤!");
+            TIL_Pass.setError(" ");
         }
     }
 }

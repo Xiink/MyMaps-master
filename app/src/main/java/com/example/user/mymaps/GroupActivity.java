@@ -11,11 +11,13 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.textclassifier.TextLinks;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -24,13 +26,29 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import butterknife.internal.Utils;
 
 public class GroupActivity extends AppCompatActivity {
 
     public String Username = "";  //使用者名稱
     private LinearLayout Group;
-    String name = "";  //群組名稱
+    private String name = "";  //群組名稱
+    private String TAG = "ONActivity_GroupActivity";
+
+    private final static String mUrl = "";
+    private RequestQueue mQueue;
+
     private static final int RESULT_FROM_GROUP = 65300;
 
     @Override
@@ -38,7 +56,7 @@ public class GroupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group);
         Group = (LinearLayout) findViewById(R.id.Group_layout); //scrollView內的Group物件
-
+        mQueue = Volley.newRequestQueue(getApplicationContext());
         // TODO : 以找到的個數去做FOR
         for (int i = 0; i <= 20; i++)
             AddView(i);
@@ -205,6 +223,33 @@ public class GroupActivity extends AppCompatActivity {
 
         /**加入Group*/
         Group.addView(layout, relativeLayout_parent_params);
+    }
+
+    /**
+     * Using  google volley to do HttpRequest.
+     */
+    private void volley_JsonObjectRequestPOST(){
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, mUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray data = response.getJSONArray("data");
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject JSONdata = data.getJSONObject(i);
+                        String id = JSONdata.getString("id");
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "onErrorResponse: Volley error : ", error);
+            }
+        });
+        mQueue.add(getRequest);
     }
 
 }

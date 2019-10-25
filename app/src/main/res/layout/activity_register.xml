@@ -17,52 +17,64 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout3">
 
-        <TextView
-            android:id="@+id/LLoginLink"
-            android:layout_width="wrap_content"
+        <!--    Username InputLayout  -->
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/TIL_register_Username"
+            android:layout_width="368dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:text="Login Here"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/RRegister" />
+            app:layout_constraintTop_toTopOf="parent">
 
-        <EditText
-            android:id="@+id/RUsername"
-            android:layout_width="357dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="8dp"
-            android:ems="10"
-            android:hint="Username"
-            android:inputType="textPersonName"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/TIET_register_Username"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Username"
+                android:inputType="textPersonName" />
 
-        <EditText
-            android:id="@+id/RPasspword"
-            android:layout_width="357dp"
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/TIL_register_Password"
+            android:layout_width="368dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:ems="10"
-            android:hint="Password"
-            android:inputType="textPassword"
-            app:layout_constraintEnd_toEndOf="@+id/RUsername"
-            app:layout_constraintTop_toBottomOf="@+id/RUsername" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/TIL_register_Username">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/TIET_register_Password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Password"
+                android:inputType="textPassword" />
+        </android.support.design.widget.TextInputLayout>
 
         <Button
             android:id="@+id/RRegister"
             android:layout_width="196dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="24dp"
             android:layout_marginEnd="8dp"
             android:text="REGISTER"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/RPasspword" />
+            app:layout_constraintTop_toBottomOf="@+id/TIL_register_Password" />
+
+        <TextView
+            android:id="@+id/LLoginLink"
+            android:layout_width="wrap_content"
+            android:layout_height="21dp"
+            android:layout_marginTop="16dp"
+            android:text="Login Here"
+            app:layout_constraintEnd_toEndOf="@+id/RRegister"
+            app:layout_constraintStart_toStartOf="@+id/RRegister"
+            app:layout_constraintTop_toBottomOf="@+id/RRegister" />
+
     </android.support.constraint.ConstraintLayout>
 
     <android.support.constraint.ConstraintLayout
