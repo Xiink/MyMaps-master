@@ -46,6 +46,7 @@ public class DirectionsParser {
                         String howlong2;
                         int text;
                         String Turn;
+                        Boolean onlyone = true;
                         polyline = (String) ((JSONObject) ((JSONObject) jSteps.get(k)).get("polyline")).get("points");
 
                         instructions = (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));//抓取路線資訊
@@ -55,8 +56,10 @@ public class DirectionsParser {
                         //取得左右轉
                        if(jSteps.length()>1){
                             Turn =  (String) (((JSONObject) jSteps.get(1)).get("html_instructions"));
+                            onlyone = false;
                         }else{
                             Turn =  (String) (((JSONObject) jSteps.get(0)).get("html_instructions"));
+                            onlyone = true;
                         }
                         howlong2 = "\n"+Turn;
                         List list = decodePolyline(polyline);
@@ -69,6 +72,7 @@ public class DirectionsParser {
                             hm.put("Turn",howlong2);
                             hm.put("Km",Integer.toString(text));
                             hm.put("all",AllMessage);
+                            hm.put("onlyone",onlyone.toString());
                             path.add(hm);
                         }
                     }

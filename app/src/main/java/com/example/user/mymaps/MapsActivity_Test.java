@@ -120,12 +120,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private String mLastUpdateTime;
 
     // location updates interval - 10sec
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
+    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 1000;
 
     // fastest updates interval - 5 sec
     // location updates will be received if another app is requesting the locations
     // than your app can handle
-    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
+    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = 100;
 
     private static final int REQUEST_CHECK_SETTINGS = 500;
 
@@ -143,7 +143,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private static final String TAG = MapsActivity_Test.class.getSimpleName();
     boolean key = false;
     boolean canDirection = false;
-    ArrayList<Polyline> pl = new ArrayList<Polyline>();
+    ArrayList<Polyline> poly1 = new ArrayList<Polyline>();
+    ArrayList<Polyline> poly2 = new ArrayList<Polyline>();
+    private Boolean changePoly = true;
     //-------------BT------------
     private static final int REQUEST_ENABLE_BT = 62512;
     final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
@@ -164,6 +166,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private String all_text = null;
     private String send_turn = null;
     private String km_text = null;
+    private String onlyone = null;
     boolean btnopen = false;
     //-------------BT------------
 
@@ -244,7 +247,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     //menu Map定位
                     case R.id.action_Start:
                         //findBT();
-                        startLocationUpdates();
+                        //startLocationUpdates();
                         if (btnopen) {
                             handler2.removeCallbacks(moveMap);
                             handler2.postDelayed(moveMap, 500);
@@ -258,15 +261,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         }
                         if (key == false) {
                             item.setTitle("暫停導航");
-                            handler.removeCallbacks(timerDirection);
-                            handler.postDelayed(timerDirection, 500);
                             key = true;
                         } else if (key == true) {
                             item.setTitle("開始導航");
-                            handler.removeCallbacksAndMessages(null);
                             handler2.removeCallbacksAndMessages(null);
-                            mRequestingLocationUpdates = false;
-                            stopLocationUpdates();
                             key = false;
                         }
                         break;
@@ -322,11 +320,18 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         mLocationCallback = new LocationCallback() {
             @Override
+            /**只要位置有變動就會進來執行*/
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 // location is received
                 mCurrentLocation = locationResult.getLastLocation();
                 mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+                latLng1 = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+                //按下導航開始畫線
+                if(key==true) {
+                    timerDirection();
+                    Toast.makeText(getApplicationContext(), latLng1.latitude+""+latLng1.longitude, Toast.LENGTH_SHORT).show();
+                }
             }
         };
 
@@ -356,13 +361,13 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
                         Log.i(TAG, "All location settings are satisfied.");
 
-                        Toast.makeText(getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
 
                         //noinspection MissingPermission
                         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
                                 mLocationCallback, Looper.myLooper());
 
-                        Toast.makeText(getApplicationContext(), "定位完成!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "開始準備位置更新", Toast.LENGTH_SHORT).show();
                         btnopen = true;
                     }
                 })
@@ -456,7 +461,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             if (num == 0) {
                 //建立標記並加入地圖中
                 markerOptions1.position(new LatLng(point.latitude, point.longitude));
-                markerOptions1.title("Destination!");
+                markerOptions1.title("目的地");
                 markerOptions1.draggable(true);
                 mMap.addMarker(markerOptions1);
                 latLng2 = new LatLng(point.latitude, point.longitude);
@@ -593,6 +598,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     String AllMessage = point.get("all");
                     String Turn = point.get("Turn");
                     String Km = point.get("Km");
+                    String only = point.get("onlyone");
                     //正則
                     AllMessage = AllMessage.replace("<b>", " ");
                     AllMessage = AllMessage.replace("</b>", " ");
@@ -614,7 +620,43 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
                     Turn = Turn.replace("/<wbr/>", " ");
 
+                    howlong = howlong.replace("<b>", " ");
+                    howlong = howlong.replace("</b>", " ");
+                    howlong = howlong.replace("</div>", " ");
+                    howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                    howlong = howlong.replace("<b>", " ");
+                    howlong = howlong.replace("</b>", " ");
+                    howlong = howlong.replace("</div>", " ");
+                    howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                    howlong = howlong.replace("/<wbr/>", " ");
+
                     switch (howlong.charAt(1)) {
+                        case 'T':
+                            send_text = "T";
+                            switch (howlong.charAt(7)) {
+                                case 'r':
+                                case 'R':
+                                    send_text += "R";
+                                    break;
+                                case 'l':
+                                case 'L':
+                                    send_text += "L";
+                                    break;
+                            }
+                            break;
+                        case 'S':
+                            send_text = "T";
+                            switch (howlong.charAt(9)) {
+                                case 'r':
+                                case 'R':
+                                    send_text += "R";
+                                    break;
+                                case 'l':
+                                case 'L':
+                                    send_text += "L";
+                                    break;
+                            }
+                            break;
                         case 'H':
                             send_text = "H";
                             switch (howlong.charAt(7)) {
@@ -627,23 +669,17 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                 case 'w':
                                     send_text += "W";
                                     break;
-                                case 'h':
-                                    send_text += "H";
+                                case 'e':
+                                    send_text += "E";
                                     break;
-
-                                case 'T':
-                                    send_text = "T";
-                                    switch (send_text.charAt(6)) {
-                                        case 'r':
-                                        case 'R':
-                                            send_text += "R";
-                                            break;
-                                        case 'l':
-                                        case 'L':
-                                            send_text += "L";
-                                            break;
-                                    }
                             }
+                            break;
+                        case 'M':
+                            switch (howlong.charAt(9)) {
+                                case 'U':
+                                    send_text = "TU";
+                            }
+                            break;
                     }
 
                     switch (Turn.charAt(1)) {
@@ -685,8 +721,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                 case 'w':
                                     send_turn += "W";
                                     break;
-                                case 'h':
-                                    send_turn += "H";
+                                case 'e':
+                                    send_turn += "E";
                                     break;
                             }
                             break;
@@ -699,38 +735,72 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     }
                     km_text = Km;
                     all_text = AllMessage;
+                    onlyone = only;
                     points.add(new LatLng(lat, lon));
                 }
-                pl.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
-                //繪製路線
-              /*  polylineOptions.addAll(points);
-                polylineOptions.width(15);
-                polylineOptions.color(Color.GREEN);
-                polylineOptions.geodesic(true);*/
+                //防止上個路線資訊殘留
+                if(poly1!=null&&poly2!=null){
+                    for (Polyline line : poly1) {
+                        line.remove();
+                    }
+                    for (Polyline line : poly2) {
+                        line.remove();
+                    }
 
+                }
+                //繪製路線
+                poly1.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
+                poly2.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
             }
             switch (send_turn) {
                 case "TR":
-                    send_turn = "右轉走";
+                    send_turn = "右轉";
                     break;
                 case "TL":
-                    send_turn = "左轉走";
+                    send_turn = "左轉";
                     break;
                 case "HN":
-                    send_turn = "朝北走";
+                    send_turn = "朝北";
                     break;
                 case "HS":
-                    send_turn = "朝南走";
+                    send_turn = "朝南";
                     break;
                 case "HW":
-                    send_turn = "朝西走";
+                    send_turn = "朝西";
                     break;
-                case "HH":
-                    send_turn = "朝東走";
+                case "HE":
+                    send_turn = "朝東";
                     break;
             }
-            send_text += km_text;
-            send_turn += km_text;
+
+            switch (send_text) {
+                case "TR":
+                    send_text = "右轉";
+                    break;
+                case "TL":
+                    send_text = "左轉";
+                    break;
+                case "HN":
+                    send_text = "朝北";
+                    break;
+                case "HS":
+                    send_text = "朝南";
+                    break;
+                case "HW":
+                    send_text = "朝西";
+                    break;
+                case "HE":
+                    send_text = "朝東";
+                    break;
+            }
+            //send_text += km_text;
+            //send_turn += km_text;
+
+            if(onlyone=="false") {
+                textView.setText(send_text + "走" + km_text + "公尺後向" + send_turn);
+            }else{
+                textView.setText(send_text+"走" + km_text + "公尺");
+            }
 
             if (BT_IsConnected()) {
                 try {
@@ -741,8 +811,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 }
             }
 
-
-            textView.setText(send_turn + "公尺");
             textViewAll.setText(all_text);
             if (polylineOptions != null) {
                 mMap.addPolyline(polylineOptions);
@@ -810,32 +878,40 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         return false;
     }
 
-
-    private Runnable timerDirection = new Runnable() {
-        @Override
-        public void run() {
-            for (Polyline line : pl) {
+    private  void timerDirection()
+    {
+        if(changePoly) {
+            for (Polyline line : poly1) {
                 line.remove();
             }
-            volley_JsonObjectRequestPOST();
-            pl.clear();
-            latLng1 = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-            markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
-            markerOptions1.title("Destination!");
-            markerOptions1.draggable(true);
-            mMap.addMarker(markerOptions1);
-            String url = getRequestUrl(latLng1, latLng2);
-            TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
-            taskRequestDirections.execute(url);
-            handler.postDelayed(timerDirection, 1500);
+            poly1.clear();
+            changePoly = false;
+        }else {
+            for (Polyline line : poly2) {
+                line.remove();
+            }
+            poly2.clear();
+            changePoly = true;
         }
-    };
+        volley_JsonObjectRequestPOST();
+        markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
+        markerOptions1.title("目的地!");
+        markerOptions1.draggable(true);
+        mMap.addMarker(markerOptions1);
+        String url = getRequestUrl(latLng1, latLng2);
+        TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
+        taskRequestDirections.execute(url);
+    }
 
     private Runnable moveMap = new Runnable() {
         @Override
         public void run() {
-            latLng1 = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1, 15.0f));
+            if(mCurrentLocation != null) {
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1, 15.0f));
+                Toast.makeText(getApplicationContext(), "定位完成", Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(getApplicationContext(), "定位尚未準備完成請稍後", Toast.LENGTH_SHORT).show();
+            }
         }
     };
 
@@ -862,7 +938,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
      *
      * @param requestCode Activity請求
      * @param resultCode  Activity回傳狀態
-     * @param data  回傳資料(可為空值)
+     * @param data        回傳資料(可為空值)
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -920,6 +996,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     /*---------------------------------------------HttpPOST------------------------------------------------*/
     double longitude = 0;  //經度
     double latitude = 0; //緯度
+
     private void volley_JsonObjectRequestPOST() {
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, mUrl, null, new Response.Listener<JSONObject>() {
             @Override
@@ -944,7 +1021,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             }
 
                             /**只取出使用者以外的資料加入地圖中*/
-                            AddUser(id,longitude,latitude);
+                            AddUser(id, longitude, latitude);
                         }
                     }
                 } catch (JSONException e) {
@@ -959,7 +1036,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         mQueue.add(getRequest);
     }
 
-    private void AddUser(String id,Double longitude,Double latitude){
+    private void AddUser(String id, Double longitude, Double latitude) {
         if (!(id.equals(result))) {
             markerOptions2.position(new LatLng(longitude, latitude));
             markerOptions2.title("Destination!");
