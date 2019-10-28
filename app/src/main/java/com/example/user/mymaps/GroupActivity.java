@@ -5,7 +5,9 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -43,10 +45,9 @@ public class GroupActivity extends AppCompatActivity {
 
     public String Username = "";  //使用者名稱
     private LinearLayout Group;
-    private String name = "";  //群組名稱
     private String TAG = "ONActivity_GroupActivity";
 
-    private final static String mUrl = "";
+    private final static String GetGroup_Url = "http://35.184.29.240:80/SearchGroup.php";
     private RequestQueue mQueue;
 
     private static final int RESULT_FROM_GROUP = 65300;
@@ -57,15 +58,13 @@ public class GroupActivity extends AppCompatActivity {
         setContentView(R.layout.activity_group);
         Group = (LinearLayout) findViewById(R.id.Group_layout); //scrollView內的Group物件
         mQueue = Volley.newRequestQueue(getApplicationContext());
-        // TODO : 以找到的個數去做FOR
-        for (int i = 0; i <= 20; i++)
-            AddView(i);
         // Bundle bundle = this.getIntent().getExtras();
         //Username = bundle.getString("name");
         Intent intent = this.getIntent();
         Username = intent.getStringExtra("name"); //從intent內拿取UserName
         Toast.makeText(getApplicationContext(), "使用者" + Username, Toast.LENGTH_LONG).show();
         initToolBar();
+        GetGroup group = new GetGroup();
     }
 
 
@@ -97,9 +96,9 @@ public class GroupActivity extends AppCompatActivity {
                 //Log.i(TAG,query);
                 Toast.makeText(GroupActivity.this, query, Toast.LENGTH_SHORT).show();
                 Group.removeAllViews();
-                int count = Integer.parseInt(query);
-                for (int i = 0; i < count; i++)
-                    AddView(i);
+//                int count = Integer.parseInt(query);
+//                for (int i = 0; i < count; i++)
+//                    AddView(i);
                 return false;
             }
 
@@ -126,25 +125,32 @@ public class GroupActivity extends AppCompatActivity {
 
 
     /**
-     * @param i Create object number
+     * @param
      */
-    protected void AddView(int i) {     //TODO : 輸入參數應為密碼 群組名 及是否有密碼
+    protected void AddView(final String name, final String password, final Integer Locked) {     //TODO : 輸入參數應為密碼 群組名 及是否有密碼
         //Layout層設定
         RelativeLayout layout = new RelativeLayout(this);
-        //Button層設定
+        //Button設定
         Button btn_group = new Button(this);
-        //TextView層設定
+        //TextView設定
         final TextView text_group = new TextView(this);
-        text_group.setTextSize(25);     //字體大小
-        text_group.setMaxLines(1);      //text只能一行
-        text_group.setEllipsize(TextUtils.TruncateAt.END);      //text只顯示到末端其餘以...顯示
-        //ImageView層設定
+        //text顯示名稱
+        text_group.setText(name);
+        //text字體大小
+        text_group.setTextSize(25);
+        //text只能一行
+        text_group.setMaxLines(1);
+        //text只顯示到末端其餘以...顯示
+        text_group.setEllipsize(TextUtils.TruncateAt.END);
+        //ImageView設定
         ImageView img_group = new ImageView(this);
+        if (Locked.equals(1))
+            img_group.setImageResource(getResources().getIdentifier("lockicon", "drawable", getPackageName()));
 
         LinearLayout.LayoutParams relativeLayout_parent_params
                 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
-        /**介面設計*/
+        //介面設計:長寬
         RelativeLayout.LayoutParams button_parent_params
                 = new RelativeLayout.LayoutParams(400, 500);
 
@@ -153,35 +159,45 @@ public class GroupActivity extends AppCompatActivity {
 
         RelativeLayout.LayoutParams img_parent_params
                 = new RelativeLayout.LayoutParams(150, 150);
-
-        button_parent_params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-        text_parent_params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         img_parent_params.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        button_parent_params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
-        /**群組按鈕設計*/
-        final AlertDialog.Builder alert = new AlertDialog.Builder(this);    //輸入密碼對話框
-        btn_group.setText("群組" + i);    //進入群組按鈕名稱
+
+        //登入按鈕設計
+        //輸入密碼對話框
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        //進入群組按鈕名稱
+        btn_group.setText("加入");
         //按鈕事件
         btn_group.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                String message;
+                View view;
                 //動態載入layout
                 LayoutInflater inflater = LayoutInflater.from(GroupActivity.this);
+                //輸入欄位
                 final View Password_view = inflater.inflate(R.layout.password_layout, null);
                 try {
+                    if (Locked.equals(1)) {
+                        message = "請輸入密碼";
+                        view = Password_view;
+                    } else {
+                        message = null;
+                        view = null;
+                    }
                     //浮動對話框，確認密碼用
-                    alert.setTitle("請輸入密碼")
-                            .setView(Password_view)
+                    alert.setTitle("確定要加入 "+name+" ?")
+                            .setMessage(message)
+                            .setView(view)
                             //確認按鈕
                             .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                                 //當OK被按下時的動作
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     EditText editText = (EditText) (Password_view.findViewById(R.id.password));
-                                    if (editText.getText().toString().equals("9999")) {
-                                        //Intent registerIntent = new Intent(GroupActivity.this, MapsActivity_Test.class);
-                                        //registerIntent.putExtra("name", Username);
-                                        //GroupActivity.this.startActivity(registerIntent);
+                                    if(!Locked.equals(1)||editText.getText().toString().equals(password)) {
                                         Intent intent = getIntent();
                                         Bundle bundle = new Bundle();
                                         bundle.putBoolean("openGroup", true);   //回傳值設定
@@ -189,7 +205,7 @@ public class GroupActivity extends AppCompatActivity {
                                         GroupActivity.this.setResult(RESULT_FROM_GROUP, intent);    //Activity回傳Result
                                         GroupActivity.this.finish();    //結束Activity
                                     } else {
-                                        Toast.makeText(getApplicationContext(), "密碼錯誤!", Toast.LENGTH_LONG).show();
+                                        Toast.makeText(getApplicationContext(), "密碼錯誤!", Toast.LENGTH_SHORT).show();
                                     }
                                 }
                             })
@@ -201,55 +217,53 @@ public class GroupActivity extends AppCompatActivity {
                 }
             }
         });
-
-        name = "";
-        name = "BCVBCVBCBCVBCBVCVBCVBCVBCVBCVBCVBCVBCVBC";
-        text_group.setText(name);
-        text_group.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast tot = Toast.makeText(GroupActivity.this, name, Toast.LENGTH_LONG);
-                tot.show();
-            }
-        });
-
-        /**有無密碼鎖*/
-        int resID = getResources().getIdentifier("lockicon", "drawable", getPackageName());
-        img_group.setImageResource(resID);
-
-        layout.addView(btn_group, button_parent_params);
-        layout.addView(text_group, text_parent_params);
         layout.addView(img_group, img_parent_params);
+        layout.addView(text_group, text_parent_params);
+        layout.addView(btn_group, button_parent_params);
+
+
 
         /**加入Group*/
         Group.addView(layout, relativeLayout_parent_params);
     }
 
+
     /**
      * Using  google volley to do HttpRequest.
      */
-    private void volley_JsonObjectRequestPOST(){
-        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, mUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    JSONArray data = response.getJSONArray("data");
-                    for (int i = 0; i < data.length(); i++) {
-                        JSONObject JSONdata = data.getJSONObject(i);
-                        String id = JSONdata.getString("id");
+    private class GetGroup {
+        JSONArray data;
+        String GroupName,GroupPassword;
+        int Locked;
 
+        //建構子，拿到全群組
+        public GetGroup() {
+            JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, GetGroup_Url, null, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    try {
+                        data = response.getJSONArray("data");
+                        Log.i(TAG, "onResponse: Get Group JSON" + data);
+                        for (int i = 0; i < data.length(); i++) {
+                            JSONObject JSONdata = data.getJSONObject(i);
+                            GroupName = JSONdata.getString("Gname");
+                            GroupPassword = JSONdata.getString("password");
+                            Locked = JSONdata.getInt("Locked");
+                            AddView(GroupName,GroupPassword, Locked);
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
                 }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e(TAG, "onErrorResponse: Volley error : ", error);
-            }
-        });
-        mQueue.add(getRequest);
-    }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "onErrorResponse: Volley error : ", error);
+                }
+            });
+            mQueue.add(getRequest);
+        }
 
+    }
 }
