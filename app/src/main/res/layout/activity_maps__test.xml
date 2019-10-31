@@ -14,6 +14,8 @@
         app:layout_constraintStart_toStartOf="parent"
         >
 
+
+
         <fragment
             android:id="@+id/map"
             class="com.google.android.gms.maps.SupportMapFragment"
@@ -38,8 +40,10 @@
             android:textSize="25dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/toolbar4"
+            app:layout_constraintVertical_bias="1.0"
             tools:ignore="MissingConstraints" />
 
         <android.support.v7.widget.Toolbar
@@ -74,6 +78,63 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+       <ScrollView
+            android:id="@+id/scrollView2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar4">
+
+
+           <LinearLayout
+               android:id="@+id/Member_layout"
+               android:layout_width="match_parent"
+               android:layout_height="0dp"
+               android:layout_marginStart="8dp"
+               android:layout_marginTop="8dp"
+               android:layout_marginEnd="8dp"
+               android:background="@color/common_google_signin_btn_text_dark_default"
+               android:orientation="vertical"
+               app:layout_constraintBottom_toBottomOf="parent"
+               app:layout_constraintEnd_toEndOf="parent"
+               app:layout_constraintHorizontal_bias="0.0"
+               app:layout_constraintStart_toStartOf="parent"
+               app:layout_constraintTop_toBottomOf="@+id/toolbar4"
+               tools:context=".MainActivity"></LinearLayout>
+
+        </ScrollView>
+
+        <ScrollView
+            android:id="@+id/scrollView3"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar4">
+
+
+           <LinearLayout
+                android:id="@+id/BT_layout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@color/common_google_signin_btn_text_dark_default"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/toolbar4"
+                tools:context=".MainActivity"></LinearLayout>
+
+        </ScrollView>
 
     </android.support.constraint.ConstraintLayout>
 

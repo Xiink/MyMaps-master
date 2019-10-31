@@ -35,6 +35,10 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -106,8 +110,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private Button button, button2;
     private GoogleMap mMap;
     private Switch switch1;
+    private ListView listView;
+    private LinearLayout Member;
+    private LinearLayout BTLinear;
+    private ScrollView Scroll_menber;
+    private ScrollView Scroll_BT;
     int num = 0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    ArrayList<Marker> Allmarker = new ArrayList<Marker>(); //儲存所有標記
     MarkerOptions markerOptions1 = new MarkerOptions();
     MarkerOptions markerOptions2 = new MarkerOptions();
     Marker mPerth;
@@ -146,6 +156,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     ArrayList<Polyline> poly1 = new ArrayList<Polyline>();
     ArrayList<Polyline> poly2 = new ArrayList<Polyline>();
     private Boolean changePoly = true;
+    private Boolean canCheck = false;
     //-------------BT------------
     private static final int REQUEST_ENABLE_BT = 62512;
     final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
@@ -213,13 +224,19 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         drawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
         navigation = (NavigationView) findViewById(R.id.navigation_view);
         toolbar = (Toolbar) findViewById(R.id.toolbar4);
+        Scroll_menber = (ScrollView) findViewById(R.id.scrollView2);
+        Scroll_BT = (ScrollView) findViewById(R.id.scrollView3);
+        Member = (LinearLayout) findViewById(R.id.Member_layout);  //成員列表
+        BTLinear =(LinearLayout) findViewById(R.id.BT_layout);  //藍芽列表
+        Scroll_menber.setVisibility(View.INVISIBLE);
+        Scroll_BT.setVisibility(View.INVISIBLE);
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-
+        AddMember("name",24,120,1);  //加入成員，未來會接上Volley
         //--------------------選單
         navigation.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -232,6 +249,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 switch (number) {
                     //menu BT連線
                     case R.id.action_BTconnect:
+                        BTLinear.removeAllViews();
+                        AddBT("9527",24,120,0);
+                        if (Scroll_BT.getVisibility() == View.VISIBLE) {
+                           // item.setTitle("開啟藍芽設備清單");
+                            Scroll_BT.setVisibility(View.INVISIBLE);
+                        } else {
+                           // item.setTitle("關閉藍芽設備清單");
+                            Scroll_BT.setVisibility(View.VISIBLE);
+                        }
+
                         if (!BT_IsConnected())
                             SearchDevice();
                         else {
@@ -272,7 +299,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     case R.id.action_information:
                         if (textViewAll.getVisibility() == View.VISIBLE) {
                             item.setTitle("開啟路線資訊");
-                            textViewAll.setVisibility(View.INVISIBLE);
+                            textViewAll.setVisibility(View.INVISIBLE);;
                         } else {
                             item.setTitle("關閉路線資訊");
                             textViewAll.setVisibility(View.VISIBLE);
@@ -300,6 +327,18 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         Intent intent_chose = new Intent(MapsActivity_Test.this, GroupActivity.class);
                         intent_chose.putExtra("name", result);
                         startActivityForResult(intent_chose, REQUEST_GROUP);
+                        break;
+
+                    case R.id.action_member:
+                        Member.removeAllViews();
+                        AddMember("name",24,120,1);  //加入成員，未來會接上Volley
+                        if (Scroll_menber.getVisibility() == View.VISIBLE) {
+                            item.setTitle("開啟成員清單");
+                            Scroll_menber.setVisibility(View.INVISIBLE);
+                        } else {
+                            item.setTitle("關閉成員清單");
+                            Scroll_menber.setVisibility(View.VISIBLE);
+                        }
                         break;
                 }
                 return false;
@@ -455,7 +494,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     @Override
     public void onMapClick(LatLng point) {
         canDirection = true;
-        if (latLng1 == null)
+        if (!canCheck)
             return;
         if (key != true) {
             if (num == 0) {
@@ -600,7 +639,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     String Km = point.get("Km");
                     String only = point.get("onlyone");
                     //正則
-                    AllMessage = AllMessage.replace("<b>", " ");
+                    AllMessage = AllMessage.replaceAll("(?:<b>|</b>|</div>|<b>|</b>|</div>|/<wbr/>)"," ");
+                    AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                    /*AllMessage = AllMessage.replace("<b>", " ");
                     AllMessage = AllMessage.replace("</b>", " ");
                     AllMessage = AllMessage.replace("</div>", " ");
                     AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
@@ -608,9 +649,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     AllMessage = AllMessage.replace("</b>", " ");
                     AllMessage = AllMessage.replace("</div>", " ");
                     AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    AllMessage = AllMessage.replace("/<wbr/>", " ");
+                    AllMessage = AllMessage.replace("/<wbr/>", " ");*/
 
-                    Turn = Turn.replace("<b>", " ");
+                    Turn = Turn.replaceAll("(?:<b>|</b>|</div>|<b>|</b>|</div>|/<wbr/>)"," ");
+                    Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                   /* Turn = Turn.replace("<b>", " ");
                     Turn = Turn.replace("</b>", " ");
                     Turn = Turn.replace("</div>", " ");
                     Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
@@ -618,9 +661,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     Turn = Turn.replace("</b>", " ");
                     Turn = Turn.replace("</div>", " ");
                     Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    Turn = Turn.replace("/<wbr/>", " ");
+                    Turn = Turn.replace("/<wbr/>", " ");*/
 
-                    howlong = howlong.replace("<b>", " ");
+                    howlong = howlong.replaceAll("(?:<b>|</b>|</div>|<b>|</b>|</div>|/<wbr/>)"," ");
+                    howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
+                   /* howlong = howlong.replace("<b>", " ");
                     howlong = howlong.replace("</b>", " ");
                     howlong = howlong.replace("</div>", " ");
                     howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
@@ -628,7 +673,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     howlong = howlong.replace("</b>", " ");
                     howlong = howlong.replace("</div>", " ");
                     howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    howlong = howlong.replace("/<wbr/>", " ");
+                    howlong = howlong.replace("/<wbr/>", " ");*/
 
                     switch (howlong.charAt(1)) {
                         case 'T':
@@ -812,6 +857,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             }
 
             textViewAll.setText(all_text);
+
             if (polylineOptions != null) {
                 mMap.addPolyline(polylineOptions);
             } else {
@@ -844,7 +890,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         public void onPermissionGranted(PermissionGrantedResponse response) {
                             mRequestingLocationUpdates = true;
                             /**成功開始呼叫位置更新函式*/
-                            //startLocationUpdates();
+                            startLocationUpdates();
                             if (mMap != null) {
                                 // Access to the location has been granted to the app.
                                 //
@@ -880,6 +926,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     private  void timerDirection()
     {
+        ClearMarkers();
         if(changePoly) {
             for (Polyline line : poly1) {
                 line.remove();
@@ -909,6 +956,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             if(mCurrentLocation != null) {
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng1, 15.0f));
                 Toast.makeText(getApplicationContext(), "定位完成", Toast.LENGTH_SHORT).show();
+                canCheck = true;
             }else{
                 Toast.makeText(getApplicationContext(), "定位尚未準備完成請稍後", Toast.LENGTH_SHORT).show();
             }
@@ -1042,17 +1090,139 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             markerOptions2.title("Destination!");
             markerOptions2.draggable(true);
             mMap.addMarker(markerOptions2);
+            mPerth = mMap.addMarker(markerOptions2);
+            Allmarker.add(mPerth);
         }
+    }
+
+    private void ClearMarkers(){
+        for(int i=0;i<Allmarker.size();i++)
+            Allmarker.get(i).remove();
     }
     /*---------------------------------------------HttpPOST------------------------------------------------*/
 
 
     /*---------------------------------------------Layout------------------------------------------------*/
 
+    /**加進群組成員*/
+    protected void AddMember(final String name,final float latitude,final float longitude, final Integer Online){
+        RelativeLayout layout = new RelativeLayout(this);
+        final TextView text_name = new TextView(this);
+        final TextView text_online = new TextView(this);
+        final TextView text_latlong = new TextView(this);
+        //final TextView text_longitude = new TextView(this);
+        text_name.setText(name);
+        if(Online.equals(1))
+            text_online.setText("1");
+        else
+            text_online.setText("0");
+        text_latlong.setText("lat:"+latitude+" long:"+longitude);
+
+        LinearLayout.LayoutParams relativeLayout_parent_params
+                = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+        RelativeLayout.LayoutParams text_parent_name
+                = new RelativeLayout.LayoutParams(400, 150);
+
+        RelativeLayout.LayoutParams text_parent_online
+                = new RelativeLayout.LayoutParams(150, 150);
+
+        RelativeLayout.LayoutParams text_parent_latlong
+                = new RelativeLayout.LayoutParams(850, 150);
 
 
 
+        text_name.setTextSize(25);
+        text_name.setPadding(100,0,0,0);
+        text_online.setTextSize(25);
+        text_latlong.setTextSize(25);
 
+        text_parent_online.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_online.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_online.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+
+        text_parent_name.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_name.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+
+        text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        text_parent_latlong.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_latlong.addRule(RelativeLayout.CENTER_VERTICAL);
+
+        layout.addView(text_name, text_parent_name);
+        layout.addView(text_online, text_parent_online);
+        layout.addView(text_latlong, text_parent_latlong);
+
+        //點擊成員事件
+        layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "點擊成功", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        Member.addView(layout,relativeLayout_parent_params);
+    }
+
+    /**加進藍芽設備*/
+    protected void AddBT(final String name,final float latitude,final float longitude, final Integer Locked){
+        RelativeLayout layout = new RelativeLayout(this);
+        final TextView text_name = new TextView(this);
+        final TextView text_online = new TextView(this);
+        final TextView text_latlong = new TextView(this);
+        //final TextView text_longitude = new TextView(this);
+        text_name.setText(name);
+        if(Locked.equals(1))
+            text_online.setText("1");
+        else
+            text_online.setText("0");
+        text_latlong.setText("lat:"+latitude+" long:"+longitude);
+
+        LinearLayout.LayoutParams relativeLayout_parent_params
+                = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 300);
+
+        RelativeLayout.LayoutParams text_parent_name
+                = new RelativeLayout.LayoutParams(400, 150);
+
+        RelativeLayout.LayoutParams text_parent_online
+                = new RelativeLayout.LayoutParams(150, 150);
+
+        RelativeLayout.LayoutParams text_parent_latlong
+                = new RelativeLayout.LayoutParams(850, 150);
+
+
+
+        text_name.setTextSize(25);
+        text_name.setPadding(100,0,0,0);
+        text_online.setTextSize(25);
+        text_latlong.setTextSize(25);
+
+        text_parent_online.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_online.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_online.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+
+        text_parent_name.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_name.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+
+        text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        text_parent_latlong.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_latlong.addRule(RelativeLayout.CENTER_VERTICAL);
+
+        layout.addView(text_name, text_parent_name);
+        layout.addView(text_online, text_parent_online);
+        layout.addView(text_latlong, text_parent_latlong);
+
+        //點擊成員事件
+        layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "點擊成功", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        BTLinear.addView(layout,relativeLayout_parent_params);
+    }
 
     /*---------------------------------------------Layout------------------------------------------------*/
 

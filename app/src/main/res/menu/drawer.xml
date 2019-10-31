@@ -29,6 +29,11 @@
 
             android:title="開啟路線資訊" />
 
+        <item
+            android:id="@+id/action_member"
+
+            android:title="開啟群組成員清單" />
+
     </group>
 
 </menu>

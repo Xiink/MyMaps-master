@@ -8,12 +8,14 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.IdRes;
+import android.support.annotation.RestrictTo;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -118,7 +120,7 @@ public class GroupActivity extends AppCompatActivity {
         if (item.getItemId() == android.R.id.home) {
             //Log.i(TAG,"back");
             Toast.makeText(this, "back", Toast.LENGTH_SHORT).show();
-
+            GroupActivity.this.finish();    //結束Activity
         }
         return true;
     }
@@ -127,7 +129,7 @@ public class GroupActivity extends AppCompatActivity {
     /**
      * @param
      */
-    protected void AddView(final String name, final String password, final Integer Locked) {     //TODO : 輸入參數應為密碼 群組名 及是否有密碼
+    protected void AddView(final String name, final String password, final Integer Locked,final Integer color) {     //TODO : 輸入參數應為密碼 群組名 及是否有密碼
         //Layout層設定
         RelativeLayout layout = new RelativeLayout(this);
         //Button設定
@@ -142,26 +144,40 @@ public class GroupActivity extends AppCompatActivity {
         text_group.setMaxLines(1);
         //text只顯示到末端其餘以...顯示
         text_group.setEllipsize(TextUtils.TruncateAt.END);
+        //text_group.setBackgroundColor(Color.WHITE);
+        text_group.setPadding(150,0,0,0);
         //ImageView設定
         ImageView img_group = new ImageView(this);
         if (Locked.equals(1))
             img_group.setImageResource(getResources().getIdentifier("lockicon", "drawable", getPackageName()));
+        if(color%2==0){
+            layout.setBackgroundColor(Color.LTGRAY);
+        }else{
+            layout.setBackgroundColor(Color.GRAY);
+        }
 
         LinearLayout.LayoutParams relativeLayout_parent_params
                 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
         //介面設計:長寬
         RelativeLayout.LayoutParams button_parent_params
-                = new RelativeLayout.LayoutParams(400, 500);
+                = new RelativeLayout.LayoutParams(400, 200);
 
         RelativeLayout.LayoutParams text_parent_params
                 = new RelativeLayout.LayoutParams(500, 150);
 
         RelativeLayout.LayoutParams img_parent_params
                 = new RelativeLayout.LayoutParams(150, 150);
+
+
+        img_parent_params.addRule(RelativeLayout.CENTER_HORIZONTAL);
         img_parent_params.addRule(RelativeLayout.CENTER_VERTICAL);
+        img_parent_params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        text_parent_params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_params.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         button_parent_params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+        button_parent_params.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
 
         //登入按鈕設計
@@ -221,8 +237,6 @@ public class GroupActivity extends AppCompatActivity {
         layout.addView(text_group, text_parent_params);
         layout.addView(btn_group, button_parent_params);
 
-
-
         /**加入Group*/
         Group.addView(layout, relativeLayout_parent_params);
     }
@@ -249,9 +263,8 @@ public class GroupActivity extends AppCompatActivity {
                             GroupName = JSONdata.getString("Gname");
                             GroupPassword = JSONdata.getString("password");
                             Locked = JSONdata.getInt("Locked");
-                            AddView(GroupName,GroupPassword, Locked);
+                            AddView(GroupName,GroupPassword, Locked,i);
                         }
-
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
