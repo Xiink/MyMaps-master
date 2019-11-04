@@ -35,6 +35,7 @@ import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -179,6 +180,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private String km_text = null;
     private String onlyone = null;
     boolean btnopen = false;
+
+    private String BTDeviceName = null;
     //-------------BT------------
 
     //-------------PHP-----------
@@ -250,24 +253,23 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     //menu BT連線
                     case R.id.action_BTconnect:
                         BTLinear.removeAllViews();
-                        AddBT("9527",24,120,0);
+                        BTDeviceName = null;
                         if (Scroll_BT.getVisibility() == View.VISIBLE) {
-                           // item.setTitle("開啟藍芽設備清單");
+                            item.setTitle("開啟藍芽設備清單");
                             Scroll_BT.setVisibility(View.INVISIBLE);
+                            //Scroll_BT.setVisibility(View.INVISIBLE);
                         } else {
-                           // item.setTitle("關閉藍芽設備清單");
-                            Scroll_BT.setVisibility(View.VISIBLE);
-                        }
-
-                        if (!BT_IsConnected())
-                            SearchDevice();
-                        else {
-                            try {
-                                closeBT();
-                                Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
-                                item.setTitle("藍芽連線");
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                            item.setTitle("關閉藍芽設備清單");
+                            //Scroll_BT.setVisibility(View.VISIBLE);
+                            if (!BT_IsConnected())
+                                SearchDevice();
+                            else {
+                                try {
+                                    closeBT();
+                                    Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
                         break;
@@ -641,39 +643,12 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     //正則
                     AllMessage = AllMessage.replaceAll("(?:<b>|</b>|</div>|<b>|</b>|</div>|/<wbr/>)"," ");
                     AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    /*AllMessage = AllMessage.replace("<b>", " ");
-                    AllMessage = AllMessage.replace("</b>", " ");
-                    AllMessage = AllMessage.replace("</div>", " ");
-                    AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    AllMessage = AllMessage.replace("<b>", " ");
-                    AllMessage = AllMessage.replace("</b>", " ");
-                    AllMessage = AllMessage.replace("</div>", " ");
-                    AllMessage = AllMessage.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    AllMessage = AllMessage.replace("/<wbr/>", " ");*/
 
                     Turn = Turn.replaceAll("(?:<b>|</b>|</div>|<b>|</b>|</div>|/<wbr/>)"," ");
                     Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                   /* Turn = Turn.replace("<b>", " ");
-                    Turn = Turn.replace("</b>", " ");
-                    Turn = Turn.replace("</div>", " ");
-                    Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    Turn = Turn.replace("<b>", " ");
-                    Turn = Turn.replace("</b>", " ");
-                    Turn = Turn.replace("</div>", " ");
-                    Turn = Turn.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    Turn = Turn.replace("/<wbr/>", " ");*/
 
                     howlong = howlong.replaceAll("(?:<b>|</b>|</div>|<b>|</b>|</div>|/<wbr/>)"," ");
                     howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                   /* howlong = howlong.replace("<b>", " ");
-                    howlong = howlong.replace("</b>", " ");
-                    howlong = howlong.replace("</div>", " ");
-                    howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    howlong = howlong.replace("<b>", " ");
-                    howlong = howlong.replace("</b>", " ");
-                    howlong = howlong.replace("</div>", " ");
-                    howlong = howlong.replace("<div style=" + '"' + "font-size:0.9em" + '"' + '>', " ");
-                    howlong = howlong.replace("/<wbr/>", " ");*/
 
                     switch (howlong.charAt(1)) {
                         case 'T':
@@ -797,6 +772,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 poly1.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
                 poly2.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
             }
+            String sendBT = send_turn;
             switch (send_turn) {
                 case "TR":
                     send_turn = "右轉";
@@ -841,15 +817,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             //send_text += km_text;
             //send_turn += km_text;
 
-            if(onlyone=="false") {
-                textView.setText(send_text + "走" + km_text + "公尺後向" + send_turn);
-            }else{
+            if(onlyone=="true") {
                 textView.setText(send_text+"走" + km_text + "公尺");
+            }else{
+                textView.setText(send_text + "走" + km_text + "公尺後向" + send_turn);
             }
 
             if (BT_IsConnected()) {
                 try {
-                    sendData(send_turn);
+                    sendData(sendBT+km_text);
                     Log.e(TAG, "onPostExecute: SEND_DATA: " + send_turn);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -1165,18 +1141,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
     /**加進藍芽設備*/
-    protected void AddBT(final String name,final float latitude,final float longitude, final Integer Locked){
+    protected void AddBT(final String name){
         RelativeLayout layout = new RelativeLayout(this);
         final TextView text_name = new TextView(this);
-        final TextView text_online = new TextView(this);
-        final TextView text_latlong = new TextView(this);
         //final TextView text_longitude = new TextView(this);
         text_name.setText(name);
-        if(Locked.equals(1))
-            text_online.setText("1");
-        else
-            text_online.setText("0");
-        text_latlong.setText("lat:"+latitude+" long:"+longitude);
 
         LinearLayout.LayoutParams relativeLayout_parent_params
                 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 300);
@@ -1184,40 +1153,48 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         RelativeLayout.LayoutParams text_parent_name
                 = new RelativeLayout.LayoutParams(400, 150);
 
-        RelativeLayout.LayoutParams text_parent_online
-                = new RelativeLayout.LayoutParams(150, 150);
-
-        RelativeLayout.LayoutParams text_parent_latlong
-                = new RelativeLayout.LayoutParams(850, 150);
-
-
-
         text_name.setTextSize(25);
         text_name.setPadding(100,0,0,0);
-        text_online.setTextSize(25);
-        text_latlong.setTextSize(25);
-
-        text_parent_online.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        text_parent_online.addRule(RelativeLayout.CENTER_VERTICAL);
-        text_parent_online.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 
         text_parent_name.addRule(RelativeLayout.CENTER_HORIZONTAL);
         text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_name.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 
-        text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-        text_parent_latlong.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        text_parent_latlong.addRule(RelativeLayout.CENTER_VERTICAL);
 
         layout.addView(text_name, text_parent_name);
-        layout.addView(text_online, text_parent_online);
-        layout.addView(text_latlong, text_parent_latlong);
 
+        final android.app.AlertDialog.Builder alert = new android.app.AlertDialog.Builder(this);
         //點擊成員事件
         layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "點擊成功", Toast.LENGTH_SHORT).show();
+                BTDeviceName = null; //初始化
+                BTDeviceName = name;
+                try{
+                    alert.setTitle("確定要與 "+name+" 進行匹配??")
+                            .setPositiveButton("ok", new DialogInterface.OnClickListener() {
+                                //當OK被按下時的動作
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    if (!BT_IsConnected())
+                                        SearchDevice();
+                                    else {
+                                        try {
+                                            closeBT();
+                                            Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }
+                            })
+                            //取消按鈕
+                            .setNegativeButton("cancel", null)
+                            .create().show();   //建立浮動對話窗並顯示
+                }catch (Exception ex) {
+                    Toast.makeText(getApplicationContext(), ex.toString(), Toast.LENGTH_LONG).show();
+                }
+               // Toast.makeText(getApplicationContext(), BTDeviceName, Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -1302,17 +1279,24 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 if (_IS_FOUND_DEVICE) {
                     //Toast.makeText(getApplicationContext(), "Found Device", Toast.LENGTH_LONG).show();
                     Log.d(TAG, "onReceive: Device is founded");
+                    Scroll_BT.setVisibility(View.VISIBLE);
                 }
                 //沒找到
                 else {
                     Toast.makeText(getApplicationContext(), "找不到對應設備", Toast.LENGTH_LONG).show();
                     Log.d(TAG, "onReceive: Device is not found");
+                    Scroll_BT.setVisibility(View.INVISIBLE);
                 }
             }
 
             if (mBluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 navigation.getMenu().findItem(R.id.action_BTconnect).setEnabled(false);
-                Toast.makeText(getApplicationContext(), "配對中...", Toast.LENGTH_LONG).show();
+                if(BTDeviceName!=null) {
+                    Toast.makeText(getApplicationContext(), "配對中...", Toast.LENGTH_LONG).show();
+                }
+                else {
+                    Toast.makeText(getApplicationContext(), "搜尋中...", Toast.LENGTH_LONG).show();
+                }
             }
             //當設備找到
             if (mmDevice.ACTION_FOUND.equals(action)) {
@@ -1320,35 +1304,44 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 BluetoothDevice device = intent.getParcelableExtra(mmDevice.EXTRA_DEVICE);
                 // Add the name and address to an array adapter to show in a ListView
                 Log.i(TAG, "onReceive: Device:" + device.getName() + " MAC:" + device.getAddress());
-                //找到設備名叫ESP32test的裝置
-                if (device.getName() != null && device.getName().equals("ESP32test")) {
-                    _IS_FOUND_DEVICE = true;
-                    //沒做過配對時去進行配對
-                    if (device.getBondState() != mmDevice.BOND_BONDED) {
-                        device.createBond();
-                        Toast.makeText(getApplicationContext(), "配對完請重新連線", Toast.LENGTH_LONG).show();
-                        //device.createBond();
-                        Log.d(TAG, "onReceive: Bound");
+                //決定一開始是搜尋並顯示設備清單還是搜尋並配對指定設備
+                if(BTDeviceName!=null){
+                    //找到設備名叫ESP32test的裝置
+                    if (device.getName() != null && device.getName().equals(BTDeviceName)) {
+                        _IS_FOUND_DEVICE = true;
+                        //沒做過配對時去進行配對
+                        if (device.getBondState() != mmDevice.BOND_BONDED) {
+                            device.createBond();
+                            Toast.makeText(getApplicationContext(), "配對完請重新連線", Toast.LENGTH_LONG).show();
+                            //device.createBond();
+                            Log.d(TAG, "onReceive: Bound");
+                        }
+                        //有配對過，準備連線
+                        else if (device.getBondState() == mmDevice.BOND_BONDED) {
+                            Log.d(TAG, "onReceive: ReadyTOConnect");
+                            mmDevice = device;
+                            new openBT().execute();
+                            Toast.makeText(getApplicationContext(), "找到設備並以連接", Toast.LENGTH_LONG).show();
+                            if (mmDevice == null)
+                                Toast.makeText(getApplicationContext(), "配對失敗", Toast.LENGTH_SHORT).show();
+                        }
+                        //已找到須關閉藍芽尋找功能，因為尋找是很耗資源的動作
+                        mBluetoothAdapter.cancelDiscovery();
                     }
-                    //有配對過，準備連線
-                    else if (device.getBondState() == mmDevice.BOND_BONDED) {
-                        Log.d(TAG, "onReceive: ReadyTOConnect");
-                        mmDevice = device;
-                        new openBT().execute();
-                        Toast.makeText(getApplicationContext(), "找到設備並以連接", Toast.LENGTH_LONG).show();
-                        if (mmDevice == null)
-                            Toast.makeText(getApplicationContext(), "配對失敗", Toast.LENGTH_SHORT).show();
+                }else {
+                    //搜尋並加入清單
+                    if(device.getName()!=null){
+                        _IS_FOUND_DEVICE = true;
+                        AddBT(device.getName());
                     }
-                    //已找到須關閉藍芽尋找功能，因為尋找是很耗資源的動作
-                    mBluetoothAdapter.cancelDiscovery();
                 }
             }
+
             if (mmDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
                 //Toast.makeText(getApplicationContext(),"已配對，請重新連線",Toast.LENGTH_LONG).show();
             }
         }
     };
-
 
     //設備連線(4)
     class openBT extends AsyncTask<Void, Void, Void> {

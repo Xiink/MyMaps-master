@@ -98,9 +98,7 @@ public class GroupActivity extends AppCompatActivity {
                 //Log.i(TAG,query);
                 Toast.makeText(GroupActivity.this, query, Toast.LENGTH_SHORT).show();
                 Group.removeAllViews();
-//                int count = Integer.parseInt(query);
-//                for (int i = 0; i < count; i++)
-//                    AddView(i);
+                SearchGroup searchGroup = new SearchGroup(query);
                 return false;
             }
 
@@ -118,8 +116,6 @@ public class GroupActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            //Log.i(TAG,"back");
-            Toast.makeText(this, "back", Toast.LENGTH_SHORT).show();
             GroupActivity.this.finish();    //結束Activity
         }
         return true;
@@ -129,7 +125,34 @@ public class GroupActivity extends AppCompatActivity {
     /**
      * @param
      */
-    protected void AddView(final String name, final String password, final Integer Locked,final Integer color) {     //TODO : 輸入參數應為密碼 群組名 及是否有密碼
+    protected void Addbtn() {
+        //Layout層設定
+        RelativeLayout layout = new RelativeLayout(this);
+
+        Button btn_add = new Button(this);
+        btn_add.setText("新建群組");
+
+        btn_add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "新增", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        LinearLayout.LayoutParams relativeLayout_parent_params
+                = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+        RelativeLayout.LayoutParams button
+                = new RelativeLayout.LayoutParams(400, 200);
+
+        button.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+        layout.addView(btn_add, button);
+        /**加入Group*/
+        Group.addView(layout, relativeLayout_parent_params);
+    }
+
+    protected void AddView(final String name, final String password, final Integer Locked, final Integer color) {     //TODO : 輸入參數應為密碼 群組名 及是否有密碼
         //Layout層設定
         RelativeLayout layout = new RelativeLayout(this);
         //Button設定
@@ -145,19 +168,21 @@ public class GroupActivity extends AppCompatActivity {
         //text只顯示到末端其餘以...顯示
         text_group.setEllipsize(TextUtils.TruncateAt.END);
         //text_group.setBackgroundColor(Color.WHITE);
-        text_group.setPadding(150,0,0,0);
+        text_group.setPadding(150, 0, 0, 0);
         //ImageView設定
         ImageView img_group = new ImageView(this);
+
         if (Locked.equals(1))
             img_group.setImageResource(getResources().getIdentifier("lockicon", "drawable", getPackageName()));
-        if(color%2==0){
+        if (color % 2 == 0) {
             layout.setBackgroundColor(Color.LTGRAY);
-        }else{
+        } else {
             layout.setBackgroundColor(Color.GRAY);
         }
 
         LinearLayout.LayoutParams relativeLayout_parent_params
                 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
 
         //介面設計:長寬
         RelativeLayout.LayoutParams button_parent_params
@@ -204,7 +229,7 @@ public class GroupActivity extends AppCompatActivity {
                         view = null;
                     }
                     //浮動對話框，確認密碼用
-                    alert.setTitle("確定要加入 "+name+" ?")
+                    alert.setTitle("確定要加入 " + name + " ?")
                             .setMessage(message)
                             .setView(view)
                             //確認按鈕
@@ -213,7 +238,7 @@ public class GroupActivity extends AppCompatActivity {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     EditText editText = (EditText) (Password_view.findViewById(R.id.password));
-                                    if(!Locked.equals(1)||editText.getText().toString().equals(password)) {
+                                    if (!Locked.equals(1) || editText.getText().toString().equals(password)) {
                                         Intent intent = getIntent();
                                         Bundle bundle = new Bundle();
                                         bundle.putBoolean("openGroup", true);   //回傳值設定
@@ -247,7 +272,7 @@ public class GroupActivity extends AppCompatActivity {
      */
     private class GetGroup {
         JSONArray data;
-        String GroupName,GroupPassword;
+        String GroupName, GroupPassword;
         int Locked;
 
         //建構子，拿到全群組
@@ -263,7 +288,9 @@ public class GroupActivity extends AppCompatActivity {
                             GroupName = JSONdata.getString("Gname");
                             GroupPassword = JSONdata.getString("password");
                             Locked = JSONdata.getInt("Locked");
-                            AddView(GroupName,GroupPassword, Locked,i);
+                            if(i==0)
+                                Addbtn();
+                            AddView(GroupName, GroupPassword, Locked, i);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -279,4 +306,41 @@ public class GroupActivity extends AppCompatActivity {
         }
 
     }
+
+    private class SearchGroup {
+        JSONArray data;
+        String GroupName, GroupPassword;
+        int Locked;
+
+        public SearchGroup(final String name) {
+            JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, GetGroup_Url, null, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    try {
+                        data = response.getJSONArray("data");
+                        Log.i(TAG, "onResponse: Get Group JSON" + data);
+                        for (int i = 0; i < data.length(); i++) {
+                            JSONObject JSONdata = data.getJSONObject(i);
+                            GroupName = JSONdata.getString("Gname");
+                            GroupPassword = JSONdata.getString("password");
+                            Locked = JSONdata.getInt("Locked");
+                            if(i==0)
+                                Addbtn();
+                            if (GroupName.indexOf(name) != -1)
+                                AddView(GroupName, GroupPassword, Locked, i);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "onErrorResponse: Volley error : ", error);
+                }
+            });
+            mQueue.add(getRequest);
+        }
+    }
+
 }

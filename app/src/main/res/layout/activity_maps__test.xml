@@ -6,14 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- 選單 -->
     <android.support.constraint.ConstraintLayout
         android:id="@+id/constraintLayout5"
         android:layout_width="0dp"
         android:layout_height="20dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        >
-
+        app:layout_constraintStart_toStartOf="parent">
 
 
         <fragment
@@ -62,8 +61,7 @@
             app:subtitle="地圖"
             app:subtitleTextColor="#FFFFFFFF"
             app:title="導航程式"
-            app:titleTextColor="#FFFFFFFF"
-            />
+            app:titleTextColor="#FFFFFFFF" />
 
 
         <TextView
@@ -78,7 +76,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-       <ScrollView
+        <ScrollView
             android:id="@+id/scrollView2"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -89,21 +87,21 @@
             app:layout_constraintTop_toBottomOf="@+id/toolbar4">
 
 
-           <LinearLayout
-               android:id="@+id/Member_layout"
-               android:layout_width="match_parent"
-               android:layout_height="0dp"
-               android:layout_marginStart="8dp"
-               android:layout_marginTop="8dp"
-               android:layout_marginEnd="8dp"
-               android:background="@color/common_google_signin_btn_text_dark_default"
-               android:orientation="vertical"
-               app:layout_constraintBottom_toBottomOf="parent"
-               app:layout_constraintEnd_toEndOf="parent"
-               app:layout_constraintHorizontal_bias="0.0"
-               app:layout_constraintStart_toStartOf="parent"
-               app:layout_constraintTop_toBottomOf="@+id/toolbar4"
-               tools:context=".MainActivity"></LinearLayout>
+            <LinearLayout
+                android:id="@+id/Member_layout"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:background="@color/common_google_signin_btn_text_dark_default"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/toolbar4"
+                tools:context=".MainActivity"></LinearLayout>
 
         </ScrollView>
 
@@ -118,7 +116,7 @@
             app:layout_constraintTop_toBottomOf="@+id/toolbar4">
 
 
-           <LinearLayout
+            <LinearLayout
                 android:id="@+id/BT_layout"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -138,10 +136,9 @@
 
     </android.support.constraint.ConstraintLayout>
 
-    <!-- 選單 -->
     <android.support.design.widget.NavigationView
         android:id="@+id/navigation_view"
-        android:layout_width="210dp"
+        android:layout_width="150dp"
         android:layout_gravity="start"
         android:layout_height="match_parent"
         app:menu="@menu/drawer"

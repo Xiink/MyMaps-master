@@ -13,7 +13,7 @@
             android:title="選擇群組" />
         <item
             android:id="@+id/action_BTconnect"
-            android:title="藍芽連線" />
+            android:title="開啟藍芽設備清單" />
         <item
             android:id="@+id/action_Start"
 
