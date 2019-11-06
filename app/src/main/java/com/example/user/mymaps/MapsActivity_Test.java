@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -109,7 +110,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
 
     private TextView textView, textViewAll;
-    private Button button, button2;
+    private Button closeBTbtn, refreshBTbtn;
     private GoogleMap mMap;
     private Switch switch1;
     private ListView listView;
@@ -117,6 +118,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private LinearLayout BTLinear;
     private ScrollView Scroll_menber;
     private ScrollView Scroll_BT;
+    private ConstraintLayout BTlayout;
     int num = 0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
     ArrayList<Marker> Allmarker = new ArrayList<Marker>(); //儲存所有標記
@@ -159,6 +161,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     ArrayList<Polyline> poly2 = new ArrayList<Polyline>();
     private Boolean changePoly = true;
     private Boolean canCheck = false;
+    private Boolean searchEnd = false;
     //-------------BT------------
     private static final int REQUEST_ENABLE_BT = 62512;
     final UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
@@ -230,11 +233,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         toolbar = (Toolbar) findViewById(R.id.toolbar4);
         Scroll_menber = (ScrollView) findViewById(R.id.scrollView2);
         Scroll_BT = (ScrollView) findViewById(R.id.scrollView3);
+        BTlayout = (ConstraintLayout) findViewById(R.id.BTconstraint);
         Member = (LinearLayout) findViewById(R.id.Member_layout);  //成員列表
         BTLinear = (LinearLayout) findViewById(R.id.BT_layout);  //藍芽列表
+        closeBTbtn = (Button) findViewById(R.id.closeBT);
+        refreshBTbtn = (Button) findViewById(R.id.refreshBT);
         Scroll_menber.setVisibility(View.INVISIBLE);
-        Scroll_BT.setVisibility(View.INVISIBLE);
         Scroll_BT.setBackgroundColor(Color.WHITE);
+        BTlayout.setVisibility(View.INVISIBLE);
+        BTlayout.setBackgroundColor(Color.WHITE);
         setSupportActionBar(toolbar);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close);
@@ -242,6 +249,54 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         toggle.syncState();
 
         AddMember("name", 24, 120, 1);  //加入成員，未來會接上Volley
+
+        //關閉藍芽
+        closeBTbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(BT_IsConnected()){
+                    try {
+                        closeBT();
+                        Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    Toast.makeText(getApplicationContext(), "尚未連接設備", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+        refreshBTbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                BTLinear.removeAllViews();
+                BTDeviceName = null;
+                searchEnd = false;
+                AddBT("已配對過裝置", "", false);
+                BTlayout.setVisibility(View.VISIBLE);
+                if (!BT_IsConnected()) {
+                    if (mBluetoothAdapter.isEnabled()) {
+                        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+                        if (pairedDevices.size() > 0) {
+                            for (BluetoothDevice device : pairedDevices) {
+                                AddBT(device.getName(), device.getAddress(), true);
+                            }
+                        }
+                    }
+                    AddBT("搜尋到的設備", "", false);
+                    SearchDevice();
+                } else {
+                    try {
+                        closeBT();
+                        Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
         //--------------------選單
         navigation.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
@@ -256,24 +311,27 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     case R.id.action_BTconnect:
                         BTLinear.removeAllViews();
                         BTDeviceName = null;
-                        if (Scroll_BT.getVisibility() == View.VISIBLE) {
+                        searchEnd = false;
+                        closeBTbtn.setEnabled(false);
+                        refreshBTbtn.setEnabled(false);
+                        if (BTlayout.getVisibility() == View.VISIBLE) {
                             item.setTitle("開啟藍芽設備清單");
-                            Scroll_BT.setVisibility(View.INVISIBLE);
+                            BTlayout.setVisibility(View.INVISIBLE);
                             //Scroll_BT.setVisibility(View.INVISIBLE);
                         } else {
-                            AddBT("已配對過裝置","",false);
+                            AddBT("已配對過裝置", "", false);
                             item.setTitle("關閉藍芽設備清單");
-                            Scroll_BT.setVisibility(View.VISIBLE);
+                            BTlayout.setVisibility(View.VISIBLE);
                             if (!BT_IsConnected()) {
-                                if (mBluetoothAdapter.isEnabled()){
+                                if (mBluetoothAdapter.isEnabled()) {
                                     Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
                                     if (pairedDevices.size() > 0) {
                                         for (BluetoothDevice device : pairedDevices) {
-                                            AddBT(device.getName(),device.getAddress(),true);
+                                            AddBT(device.getName(), device.getAddress(), true);
                                         }
                                     }
                                 }
-                                AddBT("搜尋到的設備","",false);
+                                AddBT("搜尋到的設備", "", false);
                                 SearchDevice();
                             } else {
                                 try {
@@ -1158,15 +1216,15 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     /**
      * 加進藍芽設備
      */
-    protected void AddBT(final String name,final String MAC,final Boolean canclick) {
+    protected void AddBT(final String name, final String MAC, final Boolean canclick) {
         RelativeLayout layout = new RelativeLayout(this);
         final TextView text_name = new TextView(this);
         //final TextView text_longitude = new TextView(this);
-        if (canclick){
-            text_name.setText(name+"\n"+MAC);
-        }else {
+        if (canclick) {
+            text_name.setText(name + "\n" + MAC);
+        } else {
             text_name.setText(name);
-            text_name.setGravity(Gravity.CENTER_HORIZONTAL+Gravity.CENTER_VERTICAL);
+            text_name.setGravity(Gravity.CENTER_HORIZONTAL + Gravity.CENTER_VERTICAL);
         }
 
 
@@ -1182,26 +1240,29 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         text_parent_name.addRule(RelativeLayout.CENTER_HORIZONTAL);
         text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_name.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-        text_parent_name.setMargins(0,15,0,15);
-
+        text_parent_name.setMargins(0, 15, 0, 15);
 
 
         layout.addView(text_name, text_parent_name);
 
         final android.app.AlertDialog.Builder alert = new android.app.AlertDialog.Builder(this);
         //點擊成員事件
-        if(canclick){
+        if (canclick) {
             layout.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     BTDeviceName = null; //初始化
-                    BTDeviceName = name;
                     try {
                         alert.setTitle("確定要與 " + name + " 進行匹配??")
                                 .setPositiveButton("ok", new DialogInterface.OnClickListener() {
                                     //當OK被按下時的動作
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
+                                        if (!searchEnd) {
+                                            Toast.makeText(getApplicationContext(), "請等候搜尋完成", Toast.LENGTH_LONG).show();
+                                            return;
+                                        }
+                                        BTDeviceName = name;
                                         if (!BT_IsConnected())
                                             SearchDevice();
                                         else {
@@ -1301,28 +1362,32 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             //當搜尋結束
             if (mBluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 navigation.getMenu().findItem(R.id.action_BTconnect).setEnabled(true);
-                if(BTDeviceName!=null) {
+                if (BTDeviceName != null) {
                     //有找到
                     if (_IS_FOUND_DEVICE) {
                         //Toast.makeText(getApplicationContext(), "Found Device", Toast.LENGTH_LONG).show();
                         Log.d(TAG, "onReceive: Device is founded");
-                      // Scroll_BT.setVisibility(View.INVISIBLE);
+                        BTlayout.setVisibility(View.INVISIBLE);
+                        navigation.getMenu().findItem(R.id.action_BTconnect).setTitle("開啟藍芽設備清單");
                     }
                     //沒找到
                     else {
                         Toast.makeText(getApplicationContext(), "無法與設備連線", Toast.LENGTH_LONG).show();
                         Log.d(TAG, "onReceive: Device is not found");
-                        // Scroll_BT.setVisibility(View.INVISIBLE);
                     }
-                }else{
+                } else {
                     Toast.makeText(getApplicationContext(), "搜尋完畢", Toast.LENGTH_LONG).show();
+                    //搜尋完畢才去做配對
+                    searchEnd = true;
+                    closeBTbtn.setEnabled(true);
+                    refreshBTbtn.setEnabled(true);
                 }
             }
 
             if (mBluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 navigation.getMenu().findItem(R.id.action_BTconnect).setEnabled(false);
                 if (BTDeviceName != null) {
-                    Toast.makeText(getApplicationContext(), "與"+BTDeviceName+"配對中...", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "與" + BTDeviceName + "配對中...", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(getApplicationContext(), "搜尋中...", Toast.LENGTH_LONG).show();
                 }
@@ -1360,7 +1425,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 } else {
                     //搜尋並加入清單
                     if (device.getName() != null) {
-                        AddBT(device.getName(),device.getAddress(),true);
+                        AddBT(device.getName(), device.getAddress(), true);
                     }
                 }
             }
@@ -1420,7 +1485,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             canDirection = true;
             //連線完成才開始接收資料
             beginListenForData();
-            navigation.getMenu().findItem(R.id.action_BTconnect).setTitle("藍芽斷線");
+            //navigation.getMenu().findItem(R.id.action_BTconnect).setTitle("藍芽斷線");
         }
     }
 
