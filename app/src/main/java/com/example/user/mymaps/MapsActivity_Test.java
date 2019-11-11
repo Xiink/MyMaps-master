@@ -843,7 +843,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 poly1.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
                 poly2.add(mMap.addPolyline(new PolylineOptions().addAll(points).width(15).color(Color.GREEN).geodesic(true)));
             }
+
             String sendBT = send_turn;
+
             switch (send_turn) {
                 case "TR":
                     send_turn = "右轉";
@@ -893,9 +895,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 sendBT = "F" + km_text;
             } else {
                 textView.setText(send_text + "走" + km_text + "公尺後向" + send_turn);
-                sendBT = send_turn + km_text;
+                sendBT += km_text;
             }
-
             if (BT_IsConnected()) {
                 try {
                     sendData(sendBT);
@@ -988,7 +989,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             poly2.clear();
             changePoly = true;
         }
-        volley_JsonObjectRequestPOST();
+
         markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
         markerOptions1.title("目的地!");
         markerOptions1.draggable(true);
@@ -1071,6 +1072,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             if (resultCode == RESULT_FROM_GROUP) //確認所要執行的動作
             {
                 openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
+                volley_JsonObjectRequestPOST();
             }
         }
     }
