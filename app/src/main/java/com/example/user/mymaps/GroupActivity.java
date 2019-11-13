@@ -31,6 +31,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -42,6 +43,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import butterknife.internal.Utils;
 
 public class GroupActivity extends AppCompatActivity {
@@ -51,6 +55,7 @@ public class GroupActivity extends AppCompatActivity {
     private String TAG = "ONActivity_GroupActivity";
 
     private final static String GetGroup_Url = "http://35.184.29.240:80/SearchGroup.php";
+    private final static String GetGroup_AddUser = ""; //將使用者加入群組
     private RequestQueue mQueue;
 
     private static final int RESULT_FROM_GROUP = 65300;
@@ -99,7 +104,7 @@ public class GroupActivity extends AppCompatActivity {
                 //Log.i(TAG,query);
                 Toast.makeText(GroupActivity.this, query, Toast.LENGTH_SHORT).show();
                 Group.removeAllViews();
-                SearchGroup searchGroup = new SearchGroup(query);
+                GetGroup group = new GetGroup(query);
                 return false;
             }
 
@@ -166,7 +171,9 @@ public class GroupActivity extends AppCompatActivity {
         text_group.setId(R.id.text_group);
         //text顯示名稱
         text_group.setText(name);
+        text_group.setGravity(Gravity.CENTER);
         text_member.setText(now+"/"+max);
+        text_member.setGravity(Gravity.CENTER);
         //text字體大小
         text_group.setTextSize(25);
         text_member.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
@@ -175,9 +182,10 @@ public class GroupActivity extends AppCompatActivity {
         //text只顯示到末端其餘以...顯示
         text_group.setEllipsize(TextUtils.TruncateAt.END);
         //text_group.setBackgroundColor(Color.WHITE);
-        text_group.setPadding(150, 0, 0, 0);
+        //text_group.setPadding(150, 0, 0, 0);
         //ImageView設定
         ImageView img_group = new ImageView(this);
+        img_group.setId(R.id.img_lock);
 
         if (Locked.equals(1))
             img_group.setImageResource(getResources().getIdentifier("lockicon", "drawable", getPackageName()));
@@ -193,7 +201,7 @@ public class GroupActivity extends AppCompatActivity {
 
         //介面設計:長寬
         RelativeLayout.LayoutParams button_parent_params
-                = new RelativeLayout.LayoutParams(400, 200);
+                = new RelativeLayout.LayoutParams(300, 200);
 
         RelativeLayout.LayoutParams text_parent_params
                 = new RelativeLayout.LayoutParams(400, 150);
@@ -210,7 +218,7 @@ public class GroupActivity extends AppCompatActivity {
         img_parent_params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         text_parent_params.addRule(RelativeLayout.CENTER_HORIZONTAL);
         text_parent_params.addRule(RelativeLayout.CENTER_VERTICAL);
-        text_parent_params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        text_parent_params.addRule(RelativeLayout.RIGHT_OF,R.id.img_lock);
         text_parent_params2.addRule(RelativeLayout.CENTER_HORIZONTAL);
         text_parent_params2.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_params2.addRule(RelativeLayout.LEFT_OF,R.id.join_btn);
@@ -252,6 +260,8 @@ public class GroupActivity extends AppCompatActivity {
                                 public void onClick(DialogInterface dialog, int which) {
                                     EditText editText = (EditText) (Password_view.findViewById(R.id.password));
                                     if (!Locked.equals(1) || editText.getText().toString().equals(password)) {
+                                        //將使用者加入群組
+                                        AddUser addUser = new AddUser(Username,"true");
                                         Intent intent = getIntent();
                                         Bundle bundle = new Bundle();
                                         bundle.putBoolean("openGroup", true);   //回傳值設定
@@ -304,8 +314,8 @@ public class GroupActivity extends AppCompatActivity {
                             Locked = JSONdata.getInt("Locked");
                             Nowmem = JSONdata.getInt("now_mem");
                             Maxmem = JSONdata.getInt("max_mem");
-                            if(i==0)
-                                Addbtn();
+                            //if(i==0)
+                            //   Addbtn();
                             AddView(GroupName, GroupPassword, Locked, i,Maxmem,Nowmem);
                         }
                     } catch (JSONException e) {
@@ -321,14 +331,8 @@ public class GroupActivity extends AppCompatActivity {
             mQueue.add(getRequest);
         }
 
-    }
-
-    private class SearchGroup {
-        JSONArray data;
-        String GroupName, GroupPassword;
-        int Locked,Nowmem,Maxmem;
-
-        public SearchGroup(final String name) {
+        //重構(搜尋功能)
+        public GetGroup(final String name) {
             JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, GetGroup_Url, null, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
@@ -342,8 +346,8 @@ public class GroupActivity extends AppCompatActivity {
                             Locked = JSONdata.getInt("Locked");
                             Nowmem = JSONdata.getInt("now_mem");
                             Maxmem = JSONdata.getInt("max_mem");
-                            if(i==0)
-                                Addbtn();
+                            //if(i==0)
+                            //    Addbtn();
                             if (GroupName.indexOf(name) != -1)
                                 AddView(GroupName, GroupPassword, Locked, i,Maxmem,Nowmem);
                         }
@@ -358,6 +362,36 @@ public class GroupActivity extends AppCompatActivity {
                 }
             });
             mQueue.add(getRequest);
+        }
+    }
+
+    private class AddUser {
+        //建構子，加入使用者
+        public AddUser(String Username,String isjoin) {
+            Map<String, String> map = new HashMap<String, String>();
+            map.put("Username",Username );
+            map.put("addmember", isjoin);
+            JSONObject data_send = new JSONObject(map);
+
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, GetGroup_AddUser, data_send, new Response.Listener<JSONObject>() {
+                @Override
+                public void onResponse(JSONObject response) {
+                    Log.d(TAG, "onResponse: "+response.toString());
+                }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Log.e(TAG, "onErrorResponse: ",error);
+                }
+            }) {
+                @Override
+                public Map<String, String> getHeaders() throws AuthFailureError {
+                    HashMap<String, String> headers = new HashMap<String, String>();
+                    headers.put("Content-Type", "application/json; charset=utf-8");
+                    return headers;
+                }
+            };
+            mQueue.add(postRequest);
         }
     }
 

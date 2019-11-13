@@ -32,6 +32,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.MenuItem;
@@ -248,8 +249,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
-        AddMember("name", 24, 120, 1);  //加入成員，未來會接上Volley
-
         //關閉藍芽
         closeBTbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -403,8 +402,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         break;
 
                     case R.id.action_member:
-                        Member.removeAllViews();
-                        AddMember("name", 24, 120, 1);  //加入成員，未來會接上Volley
+                        AddMember("GA","123",24,120);
                         if (Scroll_menber.getVisibility() == View.VISIBLE) {
                             item.setTitle("開啟成員清單");
                             Scroll_menber.setVisibility(View.INVISIBLE);
@@ -1072,6 +1070,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             if (resultCode == RESULT_FROM_GROUP) //確認所要執行的動作
             {
                 openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
+                Member.removeAllViews();
                 volley_JsonObjectRequestPOST();
             }
         }
@@ -1080,14 +1079,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     @Override
     public void onMyLocationClick(@NonNull Location location) {
         Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG).show();
-    }
-
-    /**
-     * Displays a dialog with error message explaining that the location permission is missing.
-     */
-    private void showMissingPermissionError() {
-        PermissionUtils.PermissionDeniedDialog
-                .newInstance(true).show(getSupportFragmentManager(), "dialog");
     }
 
 
@@ -1104,22 +1095,24 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     if (openGroup) {
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject jsondata = data.getJSONObject(i);
-                            String id = jsondata.getString("id");
-                            String name = jsondata.getString("name");
-                            String score = jsondata.getString("score");
+                            String group = jsondata.getString("Gname");
+                            String user = jsondata.getString("username");
+                            String _longitude = jsondata.getString("longitude");
+                            String _latitude = jsondata.getString("latitude");
                             try {
-                                longitude = Double.valueOf(score);
+                                longitude = Double.valueOf(_longitude);
                             } catch (Exception e) {
                                 e.toString();
                             }
                             try {
-                                latitude = Double.valueOf(name);
+                                latitude = Double.valueOf(_latitude);
                             } catch (Exception e) {
                                 e.toString();
                             }
 
-                            /**只取出使用者以外的資料加入地圖中*/
-                            AddUser(id, longitude, latitude);
+                            /**只取出使用者以外的資料加入地圖標記中*/
+                            AddMember(group,user,(float)longitude,(float) latitude);
+                            AddUser(user);
                         }
                     }
                 } catch (JSONException e) {
@@ -1134,8 +1127,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         mQueue.add(getRequest);
     }
 
-    private void AddUser(String id, Double longitude, Double latitude) {
-        if (!(id.equals(result))) {
+    private void AddUser(String user) {
+        if (!(user.equals(result))) {
             markerOptions2.position(new LatLng(longitude, latitude));
             markerOptions2.title("Destination!");
             markerOptions2.draggable(true);
@@ -1157,52 +1150,49 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     /**
      * 加進群組成員
      */
-    protected void AddMember(final String name, final float latitude, final float longitude, final Integer Online) {
+    protected void AddMember(final String group,final String name, final float longitude, final float latitude) {
         RelativeLayout layout = new RelativeLayout(this);
+        final TextView text_group = new TextView(this);
         final TextView text_name = new TextView(this);
-        final TextView text_online = new TextView(this);
-        final TextView text_latlong = new TextView(this);
-        //final TextView text_longitude = new TextView(this);
+        final TextView text_longlat = new TextView(this);
+        text_group.setText(group);
+        text_group.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
+        text_group.setId(R.id.main_group);
         text_name.setText(name);
-        if (Online.equals(1))
-            text_online.setText("1");
-        else
-            text_online.setText("0");
-        text_latlong.setText("lat:" + latitude + " long:" + longitude);
+        text_name.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
+        text_name.setId(R.id.main_name);
+        text_longlat.setText("long:" + longitude + " lat:" + latitude);
+        text_longlat.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
+        text_longlat.setId(R.id.main_longlat);
 
         LinearLayout.LayoutParams relativeLayout_parent_params
                 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
-        RelativeLayout.LayoutParams text_parent_name
-                = new RelativeLayout.LayoutParams(400, 150);
+        RelativeLayout.LayoutParams text_parent_group
+                = new RelativeLayout.LayoutParams(200, 150);
 
-        RelativeLayout.LayoutParams text_parent_online
-                = new RelativeLayout.LayoutParams(150, 150);
+        RelativeLayout.LayoutParams text_parent_name
+                = new RelativeLayout.LayoutParams(200, 150);
 
         RelativeLayout.LayoutParams text_parent_latlong
-                = new RelativeLayout.LayoutParams(850, 150);
+                = new RelativeLayout.LayoutParams(800, 150);
 
 
-        text_name.setTextSize(25);
-        text_name.setPadding(100, 0, 0, 0);
-        text_online.setTextSize(25);
-        text_latlong.setTextSize(25);
-
-        text_parent_online.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        text_parent_online.addRule(RelativeLayout.CENTER_VERTICAL);
-        text_parent_online.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        text_parent_group.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_group.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_group.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 
         text_parent_name.addRule(RelativeLayout.CENTER_HORIZONTAL);
         text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
-        text_parent_name.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        text_parent_name.addRule(RelativeLayout.RIGHT_OF,R.id.main_group);
 
         text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         text_parent_latlong.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        text_parent_latlong.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
+        layout.addView(text_group, text_parent_group);
         layout.addView(text_name, text_parent_name);
-        layout.addView(text_online, text_parent_online);
-        layout.addView(text_latlong, text_parent_latlong);
+        layout.addView(text_longlat, text_parent_latlong);
 
         //點擊成員事件
         layout.setOnClickListener(new View.OnClickListener() {
