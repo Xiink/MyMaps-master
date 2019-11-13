@@ -1426,9 +1426,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     }
                 } else {
                     //搜尋並加入清單
-                    if (device.getName() != null) {
-                        AddBT(device.getName(), device.getAddress(), true);
-                    }
+                        if (device.getName() != null) {
+                            AddBT(device.getName(), device.getAddress(), true);
+                    }else
+                            mBluetoothAdapter.cancelDiscovery();
                 }
             }
 

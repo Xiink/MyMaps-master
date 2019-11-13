@@ -15,6 +15,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -152,17 +153,23 @@ public class GroupActivity extends AppCompatActivity {
         Group.addView(layout, relativeLayout_parent_params);
     }
 
-    protected void AddView(final String name, final String password, final Integer Locked, final Integer color) {     //TODO : 輸入參數應為密碼 群組名 及是否有密碼
+    protected void AddView(final String name, final String password, final Integer Locked, final Integer color,final Integer max,final  Integer now) {     //TODO : 輸入參數應為密碼 群組名 及是否有密碼
         //Layout層設定
         RelativeLayout layout = new RelativeLayout(this);
         //Button設定
         Button btn_group = new Button(this);
+        btn_group.setId(R.id.join_btn);
         //TextView設定
         final TextView text_group = new TextView(this);
+        final TextView text_member = new TextView(this);
+        text_member.setId(R.id.text_member);
+        text_group.setId(R.id.text_group);
         //text顯示名稱
         text_group.setText(name);
+        text_member.setText(now+"/"+max);
         //text字體大小
         text_group.setTextSize(25);
+        text_member.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
         //text只能一行
         text_group.setMaxLines(1);
         //text只顯示到末端其餘以...顯示
@@ -189,7 +196,10 @@ public class GroupActivity extends AppCompatActivity {
                 = new RelativeLayout.LayoutParams(400, 200);
 
         RelativeLayout.LayoutParams text_parent_params
-                = new RelativeLayout.LayoutParams(500, 150);
+                = new RelativeLayout.LayoutParams(400, 150);
+
+        RelativeLayout.LayoutParams text_parent_params2
+                = new RelativeLayout.LayoutParams(200, 150);
 
         RelativeLayout.LayoutParams img_parent_params
                 = new RelativeLayout.LayoutParams(150, 150);
@@ -201,6 +211,9 @@ public class GroupActivity extends AppCompatActivity {
         text_parent_params.addRule(RelativeLayout.CENTER_HORIZONTAL);
         text_parent_params.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_params.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        text_parent_params2.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_params2.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_params2.addRule(RelativeLayout.LEFT_OF,R.id.join_btn);
         button_parent_params.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         button_parent_params.addRule(RelativeLayout.CENTER_HORIZONTAL);
 
@@ -261,6 +274,7 @@ public class GroupActivity extends AppCompatActivity {
         layout.addView(img_group, img_parent_params);
         layout.addView(text_group, text_parent_params);
         layout.addView(btn_group, button_parent_params);
+        layout.addView(text_member,text_parent_params2);
 
         /**加入Group*/
         Group.addView(layout, relativeLayout_parent_params);
@@ -273,7 +287,7 @@ public class GroupActivity extends AppCompatActivity {
     private class GetGroup {
         JSONArray data;
         String GroupName, GroupPassword;
-        int Locked;
+        int Locked,Nowmem,Maxmem;
 
         //建構子，拿到全群組
         public GetGroup() {
@@ -288,9 +302,11 @@ public class GroupActivity extends AppCompatActivity {
                             GroupName = JSONdata.getString("Gname");
                             GroupPassword = JSONdata.getString("password");
                             Locked = JSONdata.getInt("Locked");
+                            Nowmem = JSONdata.getInt("now_mem");
+                            Maxmem = JSONdata.getInt("max_mem");
                             if(i==0)
                                 Addbtn();
-                            AddView(GroupName, GroupPassword, Locked, i);
+                            AddView(GroupName, GroupPassword, Locked, i,Maxmem,Nowmem);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -310,7 +326,7 @@ public class GroupActivity extends AppCompatActivity {
     private class SearchGroup {
         JSONArray data;
         String GroupName, GroupPassword;
-        int Locked;
+        int Locked,Nowmem,Maxmem;
 
         public SearchGroup(final String name) {
             JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, GetGroup_Url, null, new Response.Listener<JSONObject>() {
@@ -324,10 +340,12 @@ public class GroupActivity extends AppCompatActivity {
                             GroupName = JSONdata.getString("Gname");
                             GroupPassword = JSONdata.getString("password");
                             Locked = JSONdata.getInt("Locked");
+                            Nowmem = JSONdata.getInt("now_mem");
+                            Maxmem = JSONdata.getInt("max_mem");
                             if(i==0)
                                 Addbtn();
                             if (GroupName.indexOf(name) != -1)
-                                AddView(GroupName, GroupPassword, Locked, i);
+                                AddView(GroupName, GroupPassword, Locked, i,Maxmem,Nowmem);
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="text_member" type="id"></item>
+    <item name="text_group" type="id"></item>
+    <item name="join_btn" type="id"></item>
+</resources>
