@@ -253,14 +253,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         closeBTbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(BT_IsConnected()){
+                if (BT_IsConnected()) {
                     try {
                         closeBT();
                         Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }else{
+                } else {
                     Toast.makeText(getApplicationContext(), "尚未連接設備", Toast.LENGTH_LONG).show();
                 }
             }
@@ -285,13 +285,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     }
                     AddBT("搜尋到的設備", "", false);
                     SearchDevice();
-                } else {
-                    try {
-                        closeBT();
-                        Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
         });
@@ -332,13 +325,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                 }
                                 AddBT("搜尋到的設備", "", false);
                                 SearchDevice();
-                            } else {
-                                try {
-                                    closeBT();
-                                    Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
                             }
                         }
                         break;
@@ -402,7 +388,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         break;
 
                     case R.id.action_member:
-                        AddMember("GA","123",24,120);
                         if (Scroll_menber.getVisibility() == View.VISIBLE) {
                             item.setTitle("開啟成員清單");
                             Scroll_menber.setVisibility(View.INVISIBLE);
@@ -440,7 +425,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 //按下導航開始畫線
                 if (key == true) {
                     timerDirection();
-                    Toast.makeText(getApplicationContext(), latLng1.latitude + "" + latLng1.longitude, Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getApplicationContext(), latLng1.latitude + "" + latLng1.longitude, Toast.LENGTH_SHORT).show();
                 }
             }
         };
@@ -535,12 +520,37 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
      * installed Google Play services and returned to the app.
      */
 
+    long  firstclickTime=0;
+    long  secondclickTime =0;
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if(firstclickTime>0){
+                secondclickTime = System.currentTimeMillis();
+                if(secondclickTime-firstclickTime<400)
+                    ConfirmExit();//按返回鍵，則執行退出確認
+            }
+            firstclickTime = System.currentTimeMillis();
             return true;
         }
-        return false;
+        return super.onKeyDown(keyCode, event);
+    }
+
+    public void ConfirmExit(){//退出確認
+        AlertDialog.Builder ad=new AlertDialog.Builder(MapsActivity_Test.this);
+        ad.setTitle("離開");
+        ad.setMessage("確定要離開此程式嗎?");
+        ad.setPositiveButton("是", new DialogInterface.OnClickListener() {//退出按鈕
+            public void onClick(DialogInterface dialog, int i) {
+                // TODO Auto-generated method stub
+                MapsActivity_Test.this.finish();//關閉activity
+            }
+        });
+        ad.setNegativeButton("否",new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int i) {
+            }
+        });
+        ad.show();//顯示對話框
     }
 
     //當google地圖準備好自動執行
@@ -565,6 +575,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     @Override
     public void onMapClick(LatLng point) {
         canDirection = true;
+        if(searchEnd&&BTlayout.getVisibility()==View.VISIBLE) {
+            BTlayout.setVisibility(View.INVISIBLE);
+            navigation.getMenu().findItem(R.id.action_BTconnect).setTitle("開啟藍芽設備清單");
+            return;
+        }
         if (!canCheck)
             return;
         if (key != true) {
@@ -1015,8 +1030,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     protected void onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy();
-//        unregisterReceiver(mBroadcastReceiver);
-
+//        unregisterReceiver(mBroadcastReceiver);;
         if (mmSocket != null) {
             if (mmSocket.isConnected()) {
                 try {
@@ -1026,6 +1040,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 }
             }
         }
+        Toast.makeText(getApplicationContext(), "關閉藍芽", Toast.LENGTH_SHORT).show();
+        BluetoothAdapter bAdapter = BluetoothAdapter.getDefaultAdapter();
+        bAdapter.disable();
     }
 
     /**
@@ -1070,11 +1087,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             if (resultCode == RESULT_FROM_GROUP) //確認所要執行的動作
             {
                 openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
-                Member.removeAllViews();
                 volley_JsonObjectRequestPOST();
             }
         }
     }
+
 
     @Override
     public void onMyLocationClick(@NonNull Location location) {
@@ -1111,7 +1128,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             }
 
                             /**只取出使用者以外的資料加入地圖標記中*/
-                            AddMember(group,user,(float)longitude,(float) latitude);
+                            AddMember(group, user, (float) longitude, (float) latitude);
                             AddUser(user);
                         }
                     }
@@ -1150,19 +1167,19 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     /**
      * 加進群組成員
      */
-    protected void AddMember(final String group,final String name, final float longitude, final float latitude) {
+    protected void AddMember(final String group, final String name, final float longitude, final float latitude) {
         RelativeLayout layout = new RelativeLayout(this);
         final TextView text_group = new TextView(this);
         final TextView text_name = new TextView(this);
         final TextView text_longlat = new TextView(this);
         text_group.setText(group);
-        text_group.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
+        text_group.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
         text_group.setId(R.id.main_group);
         text_name.setText(name);
-        text_name.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
+        text_name.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
         text_name.setId(R.id.main_name);
         text_longlat.setText("long:" + longitude + " lat:" + latitude);
-        text_longlat.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
+        text_longlat.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
         text_longlat.setId(R.id.main_longlat);
 
         LinearLayout.LayoutParams relativeLayout_parent_params
@@ -1184,7 +1201,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
         text_parent_name.addRule(RelativeLayout.CENTER_HORIZONTAL);
         text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
-        text_parent_name.addRule(RelativeLayout.RIGHT_OF,R.id.main_group);
+        text_parent_name.addRule(RelativeLayout.RIGHT_OF, R.id.main_group);
 
         text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         text_parent_latlong.addRule(RelativeLayout.CENTER_HORIZONTAL);
@@ -1257,14 +1274,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                                         BTDeviceName = name;
                                         if (!BT_IsConnected())
                                             SearchDevice();
-                                        else {
-                                            try {
-                                                closeBT();
-                                                Toast.makeText(getApplicationContext(), "已與設備斷線", Toast.LENGTH_LONG).show();
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
                                     }
                                 })
                                 //取消按鈕
@@ -1416,10 +1425,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     }
                 } else {
                     //搜尋並加入清單
-                        if (device.getName() != null) {
-                            AddBT(device.getName(), device.getAddress(), true);
-                    }else
-                            mBluetoothAdapter.cancelDiscovery();
+                    if (device.getName() != null) {
+                        AddBT(device.getName(), device.getAddress(), true);
+                    } else
+                        mBluetoothAdapter.cancelDiscovery();
                 }
             }
 

@@ -171,9 +171,9 @@ public class GroupActivity extends AppCompatActivity {
         text_group.setId(R.id.text_group);
         //text顯示名稱
         text_group.setText(name);
-        text_group.setGravity(Gravity.CENTER);
+        text_group.setGravity(Gravity.CENTER_VERTICAL);
         text_member.setText(now+"/"+max);
-        text_member.setGravity(Gravity.CENTER);
+        text_member.setGravity(Gravity.CENTER_VERTICAL);
         //text字體大小
         text_group.setTextSize(25);
         text_member.setAutoSizeTextTypeUniformWithConfiguration(6,25,1, TypedValue.COMPLEX_UNIT_DIP);
