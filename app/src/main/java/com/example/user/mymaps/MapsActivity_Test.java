@@ -193,6 +193,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
     private RequestQueue mQueue;
     public String Username = "";
+    public String Groupname = "";
     public String result = "";  //使用者名稱
     private JSONArray data;
     //-------------PHP-----------
@@ -388,6 +389,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         break;
 
                     case R.id.action_member:
+                        Member.removeAllViews();
+                        AddMember(Groupname, "123", 24, 120);
                         if (Scroll_menber.getVisibility() == View.VISIBLE) {
                             item.setTitle("開啟成員清單");
                             Scroll_menber.setVisibility(View.INVISIBLE);
@@ -988,7 +991,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
     private void timerDirection() {
-        ClearMarkers();
+        //ClearMarkers();
         if (changePoly) {
             for (Polyline line : poly1) {
                 line.remove();
@@ -1087,6 +1090,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             if (resultCode == RESULT_FROM_GROUP) //確認所要執行的動作
             {
                 openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
+                Groupname = data.getExtras().getString("Groupname");
                 volley_JsonObjectRequestPOST();
             }
         }
@@ -1109,10 +1113,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             public void onResponse(JSONObject response) {
                 try {
                     data = response.getJSONArray("data");
+                    //在選完群組後才開始讀
                     if (openGroup) {
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject jsondata = data.getJSONObject(i);
-                            String group = jsondata.getString("Gname");
                             String user = jsondata.getString("username");
                             String _longitude = jsondata.getString("longitude");
                             String _latitude = jsondata.getString("latitude");
@@ -1128,7 +1132,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             }
 
                             /**只取出使用者以外的資料加入地圖標記中*/
-                            AddMember(group, user, (float) longitude, (float) latitude);
+                            AddMember(Groupname, user, (float) longitude, (float) latitude);
                             AddUser(user);
                         }
                     }
@@ -1215,7 +1219,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "點擊成功", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "移動至"+name+"的位置", Toast.LENGTH_SHORT).show();
             }
         });
 

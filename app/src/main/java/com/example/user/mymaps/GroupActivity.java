@@ -265,6 +265,7 @@ public class GroupActivity extends AppCompatActivity {
                                         Intent intent = getIntent();
                                         Bundle bundle = new Bundle();
                                         bundle.putBoolean("openGroup", true);   //回傳值設定
+                                        bundle.putString("Groupname",name);
                                         intent.putExtras(bundle);
                                         GroupActivity.this.setResult(RESULT_FROM_GROUP, intent);    //Activity回傳Result
                                         GroupActivity.this.finish();    //結束Activity
