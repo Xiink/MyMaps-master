@@ -90,7 +90,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            app:title="導航程式"
+            app:title="GoGoNav"
             app:titleTextColor="#FFFFFFFF"
             app:subtitle="註冊"
             app:subtitleTextColor="#FFFFFFFF"

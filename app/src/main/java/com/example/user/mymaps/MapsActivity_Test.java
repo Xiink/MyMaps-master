@@ -49,6 +49,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -102,6 +103,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -193,6 +195,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     //-------------PHP-----------
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
+    private final static String delete_Url = "";
     private RequestQueue mQueue;
     public String Username = "";
     public String Groupname = "";
@@ -372,6 +375,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             Intent intent_login = new Intent(MapsActivity_Test.this, LoginActivity.class);
                             startActivityForResult(intent_login, REQUEST_LOGIN); //REQ_FROM_A(識別碼)
                         } else {
+                            volley_JsonObjectRequestPOST(delete_Url);
+                            ClearMarkers();
                             TextView logout = navigation.getHeaderView(0).findViewById(R.id.headertext);
                             logout.setText("尚未登入");
                             LogInSuccess = false;
@@ -385,6 +390,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             Toast.makeText(getApplicationContext(), "請先進行登入!", Toast.LENGTH_LONG).show();
                             return false;
                         }
+                        volley_JsonObjectRequestPOST(delete_Url);
                         Intent intent_chose = new Intent(MapsActivity_Test.this, GroupActivity.class);
                         intent_chose.putExtra("name", result);
                         startActivityForResult(intent_chose, REQUEST_GROUP);
@@ -392,7 +398,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                     case R.id.action_member:
                         Member.removeAllViews();
-                        AddMember(Groupname, "123", 24, 120);
+                        ClearMarkers();
+                        //AddMember(Groupname, "123", 24, 120);
                         if (Scroll_menber.getVisibility() == View.VISIBLE) {
                             item.setTitle("開啟成員清單");
                             Scroll_menber.setVisibility(View.INVISIBLE);
@@ -1094,7 +1101,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             {
                 openGroup = data.getExtras().getBoolean("openGroup");  //開啟群組功能
                 Groupname = data.getExtras().getString("Groupname");
-                volley_JsonObjectRequestPOST();
+                volley_JsonObjectRequestPOST(mUrl);
             }
         }
     }
@@ -1110,8 +1117,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     double longitude = 0;  //經度
     double latitude = 0; //緯度
 
-    private void volley_JsonObjectRequestPOST() {
-        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, mUrl, null, new Response.Listener<JSONObject>() {
+    private void volley_JsonObjectRequestPOST(String url) {
+
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("GroupName",Groupname);
+        map.put("UserName",Username );
+        JSONObject Group_data = new JSONObject(map);
+
+        JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, url, Group_data, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
@@ -1150,6 +1163,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         });
         mQueue.add(getRequest);
     }
+
 
     private void AddUser(String user) {
         if (!(user.equals(result))) {
@@ -1357,7 +1371,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             }
         }
     }
-
     //廣播(3)
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         private boolean _IS_FOUND_DEVICE = false;

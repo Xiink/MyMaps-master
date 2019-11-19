@@ -100,7 +100,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:subtitle="登入"
             app:subtitleTextColor="#FFFFFFFF"
-            app:title="導航程式"
+            app:title="GoGoNav"
             app:titleTextColor="#FFFFFFFF" />
 
     </android.support.constraint.ConstraintLayout>
