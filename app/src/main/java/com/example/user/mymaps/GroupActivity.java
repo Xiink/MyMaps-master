@@ -55,7 +55,7 @@ public class GroupActivity extends AppCompatActivity {
     private String TAG = "ONActivity_GroupActivity";
 
     private final static String GetGroup_Url = "http://35.184.29.240:80/SearchGroup.php";
-    private final static String GetGroup_AddUser = ""; //將使用者加入群組
+    private final static String GetGroup_AddUser = "http://35.184.29.240/GroupMember.php"; //將使用者加入群組
     private RequestQueue mQueue;
 
     private static final int RESULT_FROM_GROUP = 65300;
@@ -261,7 +261,7 @@ public class GroupActivity extends AppCompatActivity {
                                     EditText editText = (EditText) (Password_view.findViewById(R.id.password));
                                     if (!Locked.equals(1) || editText.getText().toString().equals(password)) {
                                         //將使用者加入群組
-                                        AddUser addUser = new AddUser(Username,"true");
+                                        AddUser addUser = new AddUser(Username,name,"true");
                                         Intent intent = getIntent();
                                         Bundle bundle = new Bundle();
                                         bundle.putBoolean("openGroup", true);   //回傳值設定
@@ -368,13 +368,14 @@ public class GroupActivity extends AppCompatActivity {
 
     private class AddUser {
         //建構子，加入使用者
-        public AddUser(String Username,String isjoin) {
+        public AddUser(String Username,String GroupName,String isjoin) {
             Map<String, String> map = new HashMap<String, String>();
-            map.put("Username",Username );
+            map.put("UserName",Username );
+            map.put("GroupName",GroupName);
             map.put("addmember", isjoin);
-            JSONObject data_send = new JSONObject(map);
+            JSONObject data = new JSONObject(map);
 
-            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, GetGroup_AddUser, data_send, new Response.Listener<JSONObject>() {
+            JsonObjectRequest postRequest = new JsonObjectRequest(Request.Method.POST, GetGroup_AddUser, data, new Response.Listener<JSONObject>() {
                 @Override
                 public void onResponse(JSONObject response) {
                     Log.d(TAG, "onResponse: "+response.toString());

@@ -2,6 +2,7 @@ package com.example.user.mymaps;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -17,6 +18,7 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -1046,6 +1048,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         Toast.makeText(getApplicationContext(), "關閉藍芽", Toast.LENGTH_SHORT).show();
         BluetoothAdapter bAdapter = BluetoothAdapter.getDefaultAdapter();
         bAdapter.disable();
+
     }
 
     /**
@@ -1564,4 +1567,5 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
     /*---------------------------------------------BT------------------------------------------------*/
+
 }
