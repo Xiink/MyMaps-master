@@ -377,6 +377,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         } else {
                             volley_JsonObjectRequestPOST(delete_Url);
                             ClearMarkers();
+                            Member.removeAllViews();
                             TextView logout = navigation.getHeaderView(0).findViewById(R.id.headertext);
                             logout.setText("尚未登入");
                             LogInSuccess = false;
@@ -390,6 +391,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             Toast.makeText(getApplicationContext(), "請先進行登入!", Toast.LENGTH_LONG).show();
                             return false;
                         }
+                        Scroll_menber.setVisibility(View.INVISIBLE);
+                        Member.removeAllViews();
+                        ClearMarkers();
                         volley_JsonObjectRequestPOST(delete_Url);
                         Intent intent_chose = new Intent(MapsActivity_Test.this, GroupActivity.class);
                         intent_chose.putExtra("name", result);
@@ -397,9 +401,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         break;
 
                     case R.id.action_member:
-                        Member.removeAllViews();
-                        ClearMarkers();
-                        //AddMember(Groupname, "123", 24, 120);
                         if (Scroll_menber.getVisibility() == View.VISIBLE) {
                             item.setTitle("開啟成員清單");
                             Scroll_menber.setVisibility(View.INVISIBLE);
@@ -1106,19 +1107,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         }
     }
 
-
     @Override
     public void onMyLocationClick(@NonNull Location location) {
         Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG).show();
     }
-
 
     /*---------------------------------------------HttpPOST------------------------------------------------*/
     double longitude = 0;  //經度
     double latitude = 0; //緯度
 
     private void volley_JsonObjectRequestPOST(String url) {
-
         Map<String, String> map = new HashMap<String, String>();
         map.put("GroupName",Groupname);
         map.put("UserName",Username );
