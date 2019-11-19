@@ -195,7 +195,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     //-------------PHP-----------
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
-    private final static String delete_Url = "";
+    private final static String delete_Url = "http://35.184.29.240:80/Logout.php";
     private RequestQueue mQueue;
     public String Username = "";
     public String Groupname = "";
@@ -375,7 +375,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             Intent intent_login = new Intent(MapsActivity_Test.this, LoginActivity.class);
                             startActivityForResult(intent_login, REQUEST_LOGIN); //REQ_FROM_A(識別碼)
                         } else {
-                            volley_JsonObjectRequestPOST(delete_Url);
+                            if(openGroup) {
+                                volley_JsonObjectRequestPOST(delete_Url);
+                                openGroup = false;
+                            }
                             ClearMarkers();
                             Member.removeAllViews();
                             TextView logout = navigation.getHeaderView(0).findViewById(R.id.headertext);
@@ -391,10 +394,14 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             Toast.makeText(getApplicationContext(), "請先進行登入!", Toast.LENGTH_LONG).show();
                             return false;
                         }
+                        navigation.getMenu().findItem(R.id.action_member).setTitle("開啟成員清單");
                         Scroll_menber.setVisibility(View.INVISIBLE);
                         Member.removeAllViews();
                         ClearMarkers();
-                        volley_JsonObjectRequestPOST(delete_Url);
+                        if(openGroup) {
+                            volley_JsonObjectRequestPOST(delete_Url);
+                            openGroup = false;
+                        }
                         Intent intent_chose = new Intent(MapsActivity_Test.this, GroupActivity.class);
                         intent_chose.putExtra("name", result);
                         startActivityForResult(intent_chose, REQUEST_GROUP);
@@ -1053,6 +1060,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 }
             }
         }
+        if(openGroup)
+            volley_JsonObjectRequestPOST(delete_Url);
         Toast.makeText(getApplicationContext(), "關閉藍芽", Toast.LENGTH_SHORT).show();
         BluetoothAdapter bAdapter = BluetoothAdapter.getDefaultAdapter();
         bAdapter.disable();
@@ -1121,7 +1130,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         map.put("GroupName",Groupname);
         map.put("UserName",Username );
         JSONObject Group_data = new JSONObject(map);
-
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, url, Group_data, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
