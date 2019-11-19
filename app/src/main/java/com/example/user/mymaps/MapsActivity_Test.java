@@ -194,7 +194,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     //-------------BT------------
 
     //-------------PHP-----------
-    private final static String mUrl = "http://35.184.29.240:80/conn.php";
+    private final static String mUrl = "http://35.184.29.240:80/Getdir.php";
     private final static String delete_Url = "http://35.184.29.240:80/Logout.php";
     private RequestQueue mQueue;
     public String Groupname = "";
@@ -253,7 +253,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 this, drawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
-
         //關閉藍芽
         closeBTbtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -395,10 +394,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         }
                         navigation.getMenu().findItem(R.id.action_member).setTitle("開啟成員清單");
                         Scroll_menber.setVisibility(View.INVISIBLE);
-                        Member.removeAllViews();
-                        ClearMarkers();
                         if(openGroup) {
                             volley_JsonObjectRequestPOST(delete_Url);
+                            Member.removeAllViews();
+                            ClearMarkers();
                             openGroup = false;
                         }
                         Intent intent_chose = new Intent(MapsActivity_Test.this, GroupActivity.class);
@@ -1153,8 +1152,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                             }
 
                             /**只取出使用者以外的資料加入地圖標記中*/
-                            AddMember(Groupname, user, (float) longitude, (float) latitude);
-                            AddUser(user);
+                            if (!(user.equals(result))) {
+                                AddMember(Groupname, user, (float) longitude, (float) latitude);
+                                AddUser();
+                            }
                         }
                     }
                 } catch (JSONException e) {
@@ -1170,20 +1171,22 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
 
-    private void AddUser(String user) {
-        if (!(user.equals(result))) {
+    private void AddUser() {
+            if(longitude==0||latitude==0)
+                return;
             markerOptions2.position(new LatLng(longitude, latitude));
             markerOptions2.title("Destination!");
             markerOptions2.draggable(true);
-            mMap.addMarker(markerOptions2);
+            //mMap.addMarker(markerOptions2);
             mPerth = mMap.addMarker(markerOptions2);
             Allmarker.add(mPerth);
-        }
     }
 
     private void ClearMarkers() {
-        for (int i = 0; i < Allmarker.size(); i++)
+        for (int i = 0; i < Allmarker.size(); i++) {
             Allmarker.get(i).remove();
+        }
+        Allmarker.removeAll(Allmarker);
     }
     /*---------------------------------------------HttpPOST------------------------------------------------*/
 
@@ -1202,7 +1205,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         text_group.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
         text_group.setId(R.id.main_group);
         text_name.setText(name);
-        text_name.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
+        //text_name.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
+        text_name.setTextSize(25);
+        text_name.setMaxLines(1);
         text_name.setId(R.id.main_name);
         text_longlat.setText("long:" + longitude + " lat:" + latitude);
         text_longlat.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
@@ -1225,9 +1230,10 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         text_parent_group.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_group.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 
+        //text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_name.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_name.addRule(RelativeLayout.RIGHT_OF, R.id.main_group);
+        //text_parent_name.addRule(RelativeLayout.LEFT_OF, R.id.main_longlat);
 
         text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         text_parent_latlong.addRule(RelativeLayout.CENTER_HORIZONTAL);
@@ -1241,7 +1247,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "移動至"+name+"的位置", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "移動至"+name+"的位置", Toast.LENGTH_SHORT).show();
+                LatLng latLng = new LatLng(longitude,latitude);
+                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
             }
         });
 
