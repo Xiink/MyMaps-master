@@ -197,7 +197,6 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private final static String mUrl = "http://35.184.29.240:80/conn.php";
     private final static String delete_Url = "http://35.184.29.240:80/Logout.php";
     private RequestQueue mQueue;
-    public String Username = "";
     public String Groupname = "";
     public String result = "";  //使用者名稱
     private JSONArray data;
@@ -1128,7 +1127,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     private void volley_JsonObjectRequestPOST(String url) {
         Map<String, String> map = new HashMap<String, String>();
         map.put("GroupName",Groupname);
-        map.put("UserName",Username );
+        map.put("UserName",result );
         JSONObject Group_data = new JSONObject(map);
         JsonObjectRequest getRequest = new JsonObjectRequest(Request.Method.POST, url, Group_data, new Response.Listener<JSONObject>() {
             @Override
