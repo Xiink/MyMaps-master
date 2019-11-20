@@ -32,7 +32,7 @@
         <item
             android:id="@+id/action_member"
 
-            android:title="開啟群組成員清單" />
+            android:title="開啟成員清單" />
 
     </group>
 

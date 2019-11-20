@@ -4,7 +4,7 @@
     <item name="text_group" type="id"></item>
     <item name="join_btn" type="id"></item>
     <item name="img_lock" type="id"></item>
-    <item name="main_group" type="id"></item>
+    <item name="main_num" type="id"></item>
     <item name="main_name" type="id"></item>
     <item name="main_longlat" type="id"></item>
 </resources>

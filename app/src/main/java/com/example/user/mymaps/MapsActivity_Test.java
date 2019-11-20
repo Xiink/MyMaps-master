@@ -130,6 +130,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     MarkerOptions markerOptions1 = new MarkerOptions();
     MarkerOptions markerOptions2 = new MarkerOptions();
     Marker mPerth;
+    Marker marker;
     Handler handler = new Handler();
     Handler handler2 = new Handler();
     Handler handler3 = new Handler();
@@ -606,7 +607,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 markerOptions1.position(new LatLng(point.latitude, point.longitude));
                 markerOptions1.title("目的地");
                 markerOptions1.draggable(true);
-                mMap.addMarker(markerOptions1);
+                marker = mMap.addMarker(markerOptions1);
                 latLng2 = new LatLng(point.latitude, point.longitude);
                 //備份座標點
                 latLng3 = latLng2;
@@ -620,7 +621,16 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                 latLng2 = new LatLng(0, 0);
                 latLng3 = new LatLng(0, 0);
                 num = 0;
-                mMap.clear();
+                //mMap.clear();
+                for (Polyline line : poly1) {
+                    line.remove();
+                }
+                poly1.clear();
+                for (Polyline line : poly2) {
+                    line.remove();
+                }
+                poly1.clear();
+                marker.remove();
                 textView.setText("");
                 canDirection = false;
             }
@@ -1020,11 +1030,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
             poly2.clear();
             changePoly = true;
         }
-
+        marker.remove();
         markerOptions1.position(new LatLng(latLng3.latitude, latLng3.longitude));
         markerOptions1.title("目的地!");
         markerOptions1.draggable(true);
-        mMap.addMarker(markerOptions1);
+        marker =  mMap.addMarker(markerOptions1);
         String url = getRequestUrl(latLng1, latLng2);
         TaskRequestDirections taskRequestDirections = new TaskRequestDirections();
         taskRequestDirections.execute(url);
@@ -1135,6 +1145,7 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                     data = response.getJSONArray("data");
                     //在選完群組後才開始讀
                     if (openGroup) {
+                        AddGroupname();
                         for (int i = 0; i < data.length(); i++) {
                             JSONObject jsondata = data.getJSONObject(i);
                             String user = jsondata.getString("username");
@@ -1153,8 +1164,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
                             /**只取出使用者以外的資料加入地圖標記中*/
                             if (!(user.equals(result))) {
-                                AddMember(Groupname, user, (float) longitude, (float) latitude);
-                                AddUser();
+                                AddMember(i+1,user, (float) longitude, (float) latitude);
+                                AddUser(user);
                             }
                         }
                     }
@@ -1171,11 +1182,11 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
     }
 
 
-    private void AddUser() {
+    private void AddUser(String name) {
             if(longitude==0||latitude==0)
                 return;
             markerOptions2.position(new LatLng(longitude, latitude));
-            markerOptions2.title("Destination!");
+            markerOptions2.title(name);
             markerOptions2.draggable(true);
             //mMap.addMarker(markerOptions2);
             mPerth = mMap.addMarker(markerOptions2);
@@ -1193,53 +1204,79 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
 
     /*---------------------------------------------Layout------------------------------------------------*/
 
-    /**
-     * 加進群組成員
-     */
-    protected void AddMember(final String group, final String name, final float longitude, final float latitude) {
+    protected void AddGroupname() {
+        //Layout層設定
         RelativeLayout layout = new RelativeLayout(this);
-        final TextView text_group = new TextView(this);
-        final TextView text_name = new TextView(this);
-        final TextView text_longlat = new TextView(this);
-        text_group.setText(group);
-        text_group.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
-        text_group.setId(R.id.main_group);
-        text_name.setText(name);
-        //text_name.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
-        text_name.setTextSize(25);
-        text_name.setMaxLines(1);
-        text_name.setId(R.id.main_name);
-        text_longlat.setText("long:" + longitude + " lat:" + latitude);
-        text_longlat.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
-        text_longlat.setId(R.id.main_longlat);
+
+        TextView group = new TextView(this);
+        group.setText(Groupname);
+        group.setAutoSizeTextTypeUniformWithConfiguration(20, 30, 1, TypedValue.COMPLEX_UNIT_DIP);
+        group.setGravity(Gravity.CENTER);
 
         LinearLayout.LayoutParams relativeLayout_parent_params
                 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
-        RelativeLayout.LayoutParams text_parent_group
-                = new RelativeLayout.LayoutParams(200, 150);
+        RelativeLayout.LayoutParams _group
+                = new RelativeLayout.LayoutParams(400, 150);
+
+        _group.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        _group.addRule(RelativeLayout.CENTER_IN_PARENT);
+        layout.setBackgroundColor(Color.LTGRAY);
+        layout.addView(group, _group);
+        /**加入Group*/
+        Member.addView(layout, relativeLayout_parent_params);
+    }
+
+    /**
+     * 加進群組成員
+     */
+    protected void AddMember(final Integer number,final String name, final float longitude, final float latitude) {
+        RelativeLayout layout = new RelativeLayout(this);
+        final TextView text_num = new TextView(this);
+        final TextView text_name = new TextView(this);
+        final TextView text_longlat = new TextView(this);
+        String num = number.toString();
+        text_num.setText(num+".");
+        text_num.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
+        text_num.setId(R.id.main_num);
+
+        text_name.setText(name);
+        text_name.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
+        text_name.setGravity(Gravity.CENTER);
+        text_name.setMaxLines(1);
+        text_name.setId(R.id.main_name);
+
+        text_longlat.setText("long:" + longitude + " lat:" + latitude);
+        text_longlat.setAutoSizeTextTypeUniformWithConfiguration(6, 25, 1, TypedValue.COMPLEX_UNIT_DIP);
+        text_longlat.setId(R.id.main_longlat);
+        text_longlat.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams relativeLayout_parent_params
+                = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+
+        RelativeLayout.LayoutParams text_parent_num
+                = new RelativeLayout.LayoutParams(100, 150);
 
         RelativeLayout.LayoutParams text_parent_name
-                = new RelativeLayout.LayoutParams(200, 150);
+                = new RelativeLayout.LayoutParams(350, 150);
 
         RelativeLayout.LayoutParams text_parent_latlong
-                = new RelativeLayout.LayoutParams(800, 150);
+                = new RelativeLayout.LayoutParams(900, 150);
 
 
-        text_parent_group.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        text_parent_group.addRule(RelativeLayout.CENTER_VERTICAL);
-        text_parent_group.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        text_parent_num.addRule(RelativeLayout.CENTER_HORIZONTAL);
+        text_parent_num.addRule(RelativeLayout.CENTER_VERTICAL);
+        text_parent_num.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
 
         //text_parent_name.addRule(RelativeLayout.CENTER_VERTICAL);
         text_parent_name.addRule(RelativeLayout.CENTER_HORIZONTAL);
-        text_parent_name.addRule(RelativeLayout.RIGHT_OF, R.id.main_group);
+        text_parent_name.addRule(RelativeLayout.RIGHT_OF,R.id.main_num);
         //text_parent_name.addRule(RelativeLayout.LEFT_OF, R.id.main_longlat);
 
-        text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
         text_parent_latlong.addRule(RelativeLayout.CENTER_HORIZONTAL);
         text_parent_latlong.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
 
-        layout.addView(text_group, text_parent_group);
+        layout.addView(text_num, text_parent_num);
         layout.addView(text_name, text_parent_name);
         layout.addView(text_longlat, text_parent_latlong);
 
@@ -1247,6 +1284,9 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                canCheck = true;
+                navigation.getMenu().findItem(R.id.action_member).setTitle("開啟成員清單");
+                Scroll_menber.setVisibility(View.INVISIBLE);
                 //Toast.makeText(getApplicationContext(), "移動至"+name+"的位置", Toast.LENGTH_SHORT).show();
                 LatLng latLng = new LatLng(longitude,latitude);
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
