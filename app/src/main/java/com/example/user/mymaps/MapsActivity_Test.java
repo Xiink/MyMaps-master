@@ -250,6 +250,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         BTlayout.setVisibility(View.INVISIBLE);
         BTlayout.setBackgroundColor(Color.WHITE);
         setSupportActionBar(toolbar);
+        closeBTbtn.setEnabled(false);
+        refreshBTbtn.setEnabled(false);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawerLayout, toolbar, R.string.drawer_open, R.string.drawer_close);
         drawerLayout.addDrawerListener(toggle);
@@ -258,6 +260,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         closeBTbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                closeBTbtn.setEnabled(false);
+                refreshBTbtn.setEnabled(false);
                 if (BT_IsConnected()) {
                     try {
                         closeBT();
@@ -274,6 +278,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
         refreshBTbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                closeBTbtn.setEnabled(false);
+                refreshBTbtn.setEnabled(false);
                 BTLinear.removeAllViews();
                 BTDeviceName = null;
                 searchEnd = false;
@@ -309,8 +315,8 @@ public class MapsActivity_Test extends AppCompatActivity implements GoogleMap.On
                         BTLinear.removeAllViews();
                         BTDeviceName = null;
                         searchEnd = false;
-                        closeBTbtn.setEnabled(false);
-                        refreshBTbtn.setEnabled(false);
+                        //closeBTbtn.setEnabled(false);
+                        //refreshBTbtn.setEnabled(false);
                         if (BTlayout.getVisibility() == View.VISIBLE) {
                             item.setTitle("開啟藍芽設備清單");
                             BTlayout.setVisibility(View.INVISIBLE);
